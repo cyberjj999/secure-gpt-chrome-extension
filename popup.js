@@ -152,31 +152,39 @@ class PopupManager {
       }
     });
 
-    this.updateSummaryStats();
+    this.updateAllPatterns();
     this.updateStatus();
   }
 
-  updateSummaryStats() {
-    const enabledCount = Object.values(this.settings.patterns).filter(Boolean).length;
-    document.getElementById('enabledCount').textContent = enabledCount;
+  updateAllPatterns() {
+    // Define all patterns with their display names
+    const patternNames = {
+      email: 'Email',
+      phone: 'Phone',
+      phoneInternational: 'Intl Phone',
+      ssn: 'SSN',
+      creditCard: 'Credit Card',
+      creditCardGeneric: 'Generic Card',
+      apiKey: 'API Key',
+      ipAddress: 'IP Address',
+      bankAccount: 'Bank Account',
+      passport: 'Passport',
+      address: 'Address'
+    };
     
-    const enabledPatterns = Object.entries(this.settings.patterns)
-      .filter(([_, enabled]) => enabled)
-      .map(([pattern, _]) => pattern);
+    const allPatternsContainer = document.getElementById('allPatterns');
+    allPatternsContainer.innerHTML = '';
     
-    const enabledPatternsContainer = document.getElementById('enabledPatterns');
-    enabledPatternsContainer.innerHTML = '';
-    
-    if (enabledPatterns.length === 0) {
-      enabledPatternsContainer.innerHTML = '<div style="color: #6c757d; font-size: 12px; font-style: italic;">No patterns enabled</div>';
-    } else {
-      enabledPatterns.forEach(pattern => {
-        const tag = document.createElement('span');
-        tag.className = 'pattern-tag';
-        tag.textContent = pattern.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        enabledPatternsContainer.appendChild(tag);
-      });
-    }
+    Object.entries(this.settings.patterns).forEach(([pattern, enabled]) => {
+      const tag = document.createElement('span');
+      tag.className = 'pattern-tag';
+      tag.textContent = patternNames[pattern] || pattern.charAt(0).toUpperCase() + pattern.slice(1);
+      if (!enabled) {
+        tag.style.opacity = '0.5';
+        tag.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+      }
+      allPatternsContainer.appendChild(tag);
+    });
   }
 
   updateStatus() {

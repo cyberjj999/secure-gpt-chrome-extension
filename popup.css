@@ -334,45 +334,13 @@ main {
   padding-bottom: 4px;
 }
 
-.summary-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-  min-width: 60px;
-}
-
-.stat-number {
-  font-size: 18px;
-  font-weight: 700;
-  color: #667eea;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 10px;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 2px;
-}
-
-.enabled-patterns {
+.all-patterns {
   margin-bottom: 12px;
   max-height: 80px;
   overflow-y: auto;
 }
 
-.enabled-patterns .pattern-tag {
+.all-patterns .pattern-tag {
   display: inline-block;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
