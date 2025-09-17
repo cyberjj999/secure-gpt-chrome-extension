@@ -266,7 +266,7 @@ class SecureGPTSimple {
     this.dePiiButton.innerHTML = '🛡️';
     this.dePiiButton.title = 'De-PII: Remove sensitive information';
     this.dePiiButton.style.cssText = `
-      background: #10a37f;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
       border-radius: 6px;
       color: white;
@@ -274,15 +274,18 @@ class SecureGPTSimple {
       font-size: 14px;
       margin-right: 8px;
       padding: 8px 10px;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
     `;
     
     // Hover effect
     this.dePiiButton.addEventListener('mouseenter', () => {
-      this.dePiiButton.style.background = '#0d8a6b';
+      this.dePiiButton.style.background = 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)';
+      this.dePiiButton.style.boxShadow = '0 4px 8px rgba(102, 126, 234, 0.3)';
     });
     this.dePiiButton.addEventListener('mouseleave', () => {
-      this.dePiiButton.style.background = '#10a37f';
+      this.dePiiButton.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      this.dePiiButton.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.2)';
     });
     
     // Click handler
@@ -319,15 +322,15 @@ class SecureGPTSimple {
     
     this.showNotification('Sensitive information removed!');
     
-    // Visual feedback on button
-    const originalButtonText = this.dePiiButton.innerHTML;
-    this.dePiiButton.innerHTML = '✅';
-    this.dePiiButton.style.background = '#22c55e';
-    
-    setTimeout(() => {
-      this.dePiiButton.innerHTML = originalButtonText;
-      this.dePiiButton.style.background = '#10a37f';
-    }, 1500);
+      // Visual feedback on button
+      const originalButtonText = this.dePiiButton.innerHTML;
+      this.dePiiButton.innerHTML = '✅';
+      this.dePiiButton.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+      
+      setTimeout(() => {
+        this.dePiiButton.innerHTML = originalButtonText;
+        this.dePiiButton.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      }, 1500);
   }
 
   sanitizeText(text) {
