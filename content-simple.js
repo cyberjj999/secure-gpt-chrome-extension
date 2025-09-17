@@ -438,7 +438,11 @@ class SecureGPTSimple {
         const pattern = this.patterns[patternName];
         const matches = sanitized.match(pattern.regex);
         if (matches) {
-          sanitized = sanitized.replace(pattern.regex, pattern.placeholder);
+          // Use custom placeholder from settings if available, otherwise use default
+          const placeholder = this.settings.placeholders && this.settings.placeholders[patternName] 
+            ? this.settings.placeholders[patternName] 
+            : pattern.placeholder;
+          sanitized = sanitized.replace(pattern.regex, placeholder);
           replacementCount += matches.length;
         }
       }

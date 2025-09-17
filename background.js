@@ -19,6 +19,17 @@ chrome.runtime.onInstalled.addListener(() => {
         bankAccount: true,
         passport: true,
         address: true
+      },
+      placeholders: {
+        email: '[EMAIL_REDACTED]',
+        phone: '[PHONE_REDACTED]',
+        ssn: '[SSN_REDACTED]',
+        creditCard: '[CREDIT_CARD_REDACTED]',
+        apiKey: '[API_KEY_REDACTED]',
+        ipAddress: '[IP_ADDRESS_REDACTED]',
+        bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
+        passport: '[PASSPORT_REDACTED]',
+        address: '[ADDRESS_REDACTED]'
       }
     }
   });

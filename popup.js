@@ -30,6 +30,17 @@ class PopupManager {
           passport: true,
           address: true
         },
+        placeholders: {
+          email: '[EMAIL_REDACTED]',
+          phone: '[PHONE_REDACTED]',
+          ssn: '[SSN_REDACTED]',
+          creditCard: '[CREDIT_CARD_REDACTED]',
+          apiKey: '[API_KEY_REDACTED]',
+          ipAddress: '[IP_ADDRESS_REDACTED]',
+          bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
+          passport: '[PASSPORT_REDACTED]',
+          address: '[ADDRESS_REDACTED]'
+        },
         ...response
       };
     } catch (error) {
@@ -49,6 +60,17 @@ class PopupManager {
           bankAccount: true,
           passport: true,
           address: true
+        },
+        placeholders: {
+          email: '[EMAIL_REDACTED]',
+          phone: '[PHONE_REDACTED]',
+          ssn: '[SSN_REDACTED]',
+          creditCard: '[CREDIT_CARD_REDACTED]',
+          apiKey: '[API_KEY_REDACTED]',
+          ipAddress: '[IP_ADDRESS_REDACTED]',
+          bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
+          passport: '[PASSPORT_REDACTED]',
+          address: '[ADDRESS_REDACTED]'
         }
       };
     }
@@ -84,6 +106,16 @@ class PopupManager {
       }
     });
 
+    // Placeholder inputs
+    Object.keys(this.settings.placeholders).forEach(pattern => {
+      const input = document.getElementById(`placeholder-${pattern}`);
+      if (input) {
+        input.addEventListener('input', (e) => {
+          this.settings.placeholders[pattern] = e.target.value || this.settings.placeholders[pattern];
+        });
+      }
+    });
+
     // Save button
     const saveButton = document.getElementById('saveButton');
     saveButton.addEventListener('click', () => this.saveSettings());
@@ -104,6 +136,14 @@ class PopupManager {
       const checkbox = document.getElementById(`pattern-${pattern}`);
       if (checkbox) {
         checkbox.checked = enabled;
+      }
+    });
+
+    // Update placeholder inputs
+    Object.entries(this.settings.placeholders).forEach(([pattern, placeholder]) => {
+      const input = document.getElementById(`placeholder-${pattern}`);
+      if (input) {
+        input.value = placeholder;
       }
     });
 
@@ -161,18 +201,29 @@ class PopupManager {
       enabled: true,
       showNotifications: true,
       autoScan: true,
-      patterns: {
-        email: true,
-        phone: true,
-        ssn: true,
-        creditCard: true,
-        apiKey: true,
-        ipAddress: true,
-        bankAccount: true,
-        passport: true,
-        address: true
-      }
-    };
+        patterns: {
+          email: true,
+          phone: true,
+          ssn: true,
+          creditCard: true,
+          apiKey: true,
+          ipAddress: true,
+          bankAccount: true,
+          passport: true,
+          address: true
+        },
+        placeholders: {
+          email: '[EMAIL_REDACTED]',
+          phone: '[PHONE_REDACTED]',
+          ssn: '[SSN_REDACTED]',
+          creditCard: '[CREDIT_CARD_REDACTED]',
+          apiKey: '[API_KEY_REDACTED]',
+          ipAddress: '[IP_ADDRESS_REDACTED]',
+          bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
+          passport: '[PASSPORT_REDACTED]',
+          address: '[ADDRESS_REDACTED]'
+        }
+      };
     
     this.updateUI();
   }

@@ -180,6 +180,78 @@ main {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
+/* Placeholders Section */
+.placeholders-section {
+  margin-top: 20px;
+}
+
+.placeholders-section h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 4px;
+}
+
+.section-description {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 12px;
+}
+
+.placeholders-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.placeholder-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s;
+}
+
+.placeholder-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+}
+
+.placeholder-label {
+  flex: 0 0 120px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-right: 8px;
+}
+
+.placeholder-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: #f8f9fa;
+  transition: all 0.2s;
+}
+
+.placeholder-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.placeholder-input::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
 /* Actions Section */
 .actions-section {
   margin-top: 20px;
