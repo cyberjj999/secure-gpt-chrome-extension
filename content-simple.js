@@ -82,7 +82,46 @@ class SecureGPTSimple {
       console.log('SecureGPT: Using default settings');
     }
 
+    // Check if protection is enabled for this website
+    if (!this.isWebsiteEnabled()) {
+      return;
+    }
+
     this.setupEventListeners();
+  }
+
+  isWebsiteEnabled() {
+    const hostname = window.location.hostname;
+    const websites = this.settings.websites || {};
+    
+    // Check if any website is enabled for this hostname
+    if (hostname.includes('openai.com') || hostname.includes('chatgpt.com')) {
+      return websites.chatgpt !== false;
+    }
+    if (hostname.includes('claude.ai')) {
+      return websites.claude !== false;
+    }
+    if (hostname.includes('gemini.google.com')) {
+      return websites.gemini !== false;
+    }
+    if (hostname.includes('ai.meta.com')) {
+      return websites.llama !== false;
+    }
+    if (hostname.includes('mistral.ai')) {
+      return websites.mistral !== false;
+    }
+    if (hostname.includes('x.ai')) {
+      return websites.grok !== false;
+    }
+    if (hostname.includes('cohere.com')) {
+      return websites.cohere !== false;
+    }
+    if (hostname.includes('perplexity.ai')) {
+      return websites.perplexity !== false;
+    }
+    
+    // Default to enabled for unknown sites
+    return true;
   }
 
   setupEventListeners() {

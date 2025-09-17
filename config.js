@@ -17,6 +17,16 @@ class ConfigManager {
         passport: true,
         address: true
       },
+      websites: {
+        chatgpt: true,
+        claude: true,
+        gemini: true,
+        llama: true,
+        mistral: true,
+        grok: true,
+        cohere: true,
+        perplexity: true
+      },
       placeholders: {
         email: '[EMAIL_REDACTED]',
         phone: '[PHONE_REDACTED]',
@@ -116,6 +126,16 @@ class ConfigManager {
       }
     });
 
+    // Website checkboxes
+    Object.keys(this.settings.websites).forEach(website => {
+      const checkbox = document.getElementById(`website-${website}`);
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          this.settings.websites[website] = e.target.checked;
+        });
+      }
+    });
+
     // Test buttons
     document.querySelectorAll('.test-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -151,6 +171,14 @@ class ConfigManager {
         input.value = placeholder;
       }
     });
+
+    // Update website checkboxes
+    Object.entries(this.settings.websites).forEach(([website, enabled]) => {
+      const checkbox = document.getElementById(`website-${website}`);
+      if (checkbox) {
+        checkbox.checked = enabled;
+      }
+    });
   }
 
   async saveSettings() {
@@ -184,6 +212,16 @@ class ConfigManager {
         bankAccount: true,
         passport: true,
         address: true
+      },
+      websites: {
+        chatgpt: true,
+        claude: true,
+        gemini: true,
+        llama: true,
+        mistral: true,
+        grok: true,
+        cohere: true,
+        perplexity: true
       },
       placeholders: {
         email: '[EMAIL_REDACTED]',

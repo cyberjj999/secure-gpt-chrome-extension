@@ -20,6 +20,16 @@ chrome.runtime.onInstalled.addListener(() => {
         passport: true,
         address: true
       },
+      websites: {
+        chatgpt: true,
+        claude: true,
+        gemini: true,
+        llama: true,
+        mistral: true,
+        grok: true,
+        cohere: true,
+        perplexity: true
+      },
       placeholders: {
         email: '[EMAIL_REDACTED]',
         phone: '[PHONE_REDACTED]',
