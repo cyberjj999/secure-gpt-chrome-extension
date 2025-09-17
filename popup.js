@@ -116,6 +116,14 @@ class PopupManager {
       }
     });
 
+    // Test buttons
+    document.querySelectorAll('.test-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const pattern = e.target.getAttribute('data-pattern');
+        this.testPattern(pattern);
+      });
+    });
+
     // Save button
     const saveButton = document.getElementById('saveButton');
     saveButton.addEventListener('click', () => this.saveSettings());
@@ -194,6 +202,71 @@ class PopupManager {
         saveButton.disabled = false;
       }, 1500);
     }
+  }
+
+  testPattern(patternName) {
+    const testInput = document.getElementById(`test-${patternName}`);
+    const testText = testInput.value.trim();
+    
+    if (!testText) {
+      this.showTestResult(patternName, 'Please enter text to test', 'warning');
+      return;
+    }
+
+    // Define patterns (same as content script)
+    const patterns = {
+      email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}\b/gi,
+      phone: /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b/g,
+      phoneInternational: /\+[1-9]\d{1,14}\b/g,
+      ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,
+      creditCard: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
+      creditCardGeneric: /\b\d{13,19}\b/g,
+      apiKey: /\b[A-Za-z0-9]{20,}\b/g,
+      ipAddress: /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g,
+      bankAccount: /\b(?:account|acct|routing)[\s#:]*\d{8,17}\b/gi,
+      passport: /\b[A-Z]{1,2}\d{6,9}\b/g,
+      address: /\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Circle|Cir|Way)\b/gi
+    };
+
+    const pattern = patterns[patternName];
+    if (!pattern) {
+      this.showTestResult(patternName, 'Pattern not found', 'error');
+      return;
+    }
+
+    const isDetected = pattern.test(testText);
+    const placeholder = this.settings.placeholders[patternName] || `[${patternName.toUpperCase()}_REDACTED]`;
+    
+    if (isDetected) {
+      const sanitized = testText.replace(pattern, placeholder);
+      this.showTestResult(patternName, `Detected! Would become: "${sanitized}"`, 'detected');
+    } else {
+      this.showTestResult(patternName, 'No sensitive data detected', 'safe');
+    }
+  }
+
+  showTestResult(patternName, message, type) {
+    // Remove existing result
+    const existingResult = document.querySelector(`#test-${patternName}`).parentNode.querySelector('.test-result');
+    if (existingResult) {
+      existingResult.remove();
+    }
+
+    // Create new result
+    const result = document.createElement('div');
+    result.className = `test-result ${type}`;
+    result.textContent = message;
+    
+    // Insert after the test input
+    const testInput = document.getElementById(`test-${patternName}`);
+    testInput.parentNode.appendChild(result);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (result.parentNode) {
+        result.remove();
+      }
+    }, 5000);
   }
 
   resetSettings() {
