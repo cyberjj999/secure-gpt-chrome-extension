@@ -40,7 +40,8 @@ chrome.runtime.onInstalled.addListener(() => {
         bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
         passport: '[PASSPORT_REDACTED]',
         address: '[ADDRESS_REDACTED]'
-      }
+      },
+      ignoreList: []
     }
   });
 });

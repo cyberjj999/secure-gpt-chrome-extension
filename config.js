@@ -39,7 +39,8 @@ class ConfigManager {
         bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
         passport: '[PASSPORT_REDACTED]',
         address: '[ADDRESS_REDACTED]'
-      }
+      },
+      ignoreList: []
     };
     
     this.init();
@@ -144,6 +145,20 @@ class ConfigManager {
       });
     });
 
+    // Ignore list functionality
+    const addIgnoreBtn = document.getElementById('addIgnoreBtn');
+    const ignoreInput = document.getElementById('ignoreInput');
+    
+    addIgnoreBtn.addEventListener('click', () => {
+      this.addToIgnoreList();
+    });
+    
+    ignoreInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.addToIgnoreList();
+      }
+    });
+
     // Action buttons
     document.getElementById('saveButton').addEventListener('click', () => this.saveSettings());
     document.getElementById('resetButton').addEventListener('click', () => this.resetSettings());
@@ -179,6 +194,9 @@ class ConfigManager {
         checkbox.checked = enabled;
       }
     });
+
+    // Update ignore list
+    this.updateIgnoreList();
   }
 
   async saveSettings() {
@@ -315,6 +333,49 @@ class ConfigManager {
     setTimeout(() => {
       statusMessage.classList.remove('show');
     }, 3000);
+  }
+
+  addToIgnoreList() {
+    const ignoreInput = document.getElementById('ignoreInput');
+    const text = ignoreInput.value.trim();
+    
+    if (!text) return;
+    
+    if (this.settings.ignoreList.includes(text)) {
+      this.showStatusMessage('Text already in ignore list', 'warning');
+      return;
+    }
+    
+    this.settings.ignoreList.push(text);
+    ignoreInput.value = '';
+    this.updateIgnoreList();
+    this.showStatusMessage('Added to ignore list', 'success');
+  }
+
+  removeFromIgnoreList(text) {
+    this.settings.ignoreList = this.settings.ignoreList.filter(item => item !== text);
+    this.updateIgnoreList();
+    this.showStatusMessage('Removed from ignore list', 'success');
+  }
+
+  updateIgnoreList() {
+    const ignoreListDiv = document.getElementById('ignoreList');
+    ignoreListDiv.innerHTML = '';
+    
+    if (this.settings.ignoreList.length === 0) {
+      ignoreListDiv.innerHTML = '<div style="color: #6c757d; font-style: italic; padding: 8px;">No items in ignore list</div>';
+      return;
+    }
+    
+    this.settings.ignoreList.forEach(text => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'ignore-item';
+      itemDiv.innerHTML = `
+        <span class="ignore-item-text" title="${text}">${text}</span>
+        <button class="ignore-item-remove" onclick="configManager.removeFromIgnoreList('${text}')">×</button>
+      `;
+      ignoreListDiv.appendChild(itemDiv);
+    });
   }
 
   goBack() {

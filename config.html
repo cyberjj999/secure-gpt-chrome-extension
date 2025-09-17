@@ -145,7 +145,7 @@
             <div class="col-enable">Enable</div>
             <div class="col-pattern">Pattern Type</div>
             <div class="col-placeholder">Custom Placeholder</div>
-            <div class="col-test">Test & Ignore</div>
+            <div class="col-test">Test</div>
           </div>
           
           <div class="pattern-row">
@@ -332,6 +332,20 @@
             <div class="col-test">
               <input type="text" id="test-address" class="test-input" placeholder="123 Main Street">
               <button class="test-btn" data-pattern="address">Test</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="ignore-list-section">
+          <h3>Ignore List</h3>
+          <p class="section-description">Add specific text patterns that should never be redacted, even if they match detection patterns.</p>
+          <div class="ignore-list-container">
+            <div class="ignore-input-group">
+              <input type="text" id="ignoreInput" placeholder="Enter text to ignore (e.g., test@example.com)" class="ignore-input">
+              <button id="addIgnoreBtn" class="add-ignore-btn">Add</button>
+            </div>
+            <div class="ignore-list" id="ignoreList">
+              <!-- Dynamically populated -->
             </div>
           </div>
         </div>
