@@ -81,6 +81,7 @@ class PopupManager {
     const enabledToggle = document.getElementById('enabledToggle');
     enabledToggle.addEventListener('change', (e) => {
       this.settings.enabled = e.target.checked;
+      this.saveSettings();
       this.updateStatus();
     });
 
@@ -88,12 +89,14 @@ class PopupManager {
     const notificationsToggle = document.getElementById('notificationsToggle');
     notificationsToggle.addEventListener('change', (e) => {
       this.settings.showNotifications = e.target.checked;
+      this.saveSettings();
     });
 
     // Auto-scan toggle
     const autoScanToggle = document.getElementById('autoScanToggle');
     autoScanToggle.addEventListener('change', (e) => {
       this.settings.autoScan = e.target.checked;
+      this.saveSettings();
     });
 
     // Pattern checkboxes
@@ -296,6 +299,17 @@ class PopupManager {
         result.remove();
       }
     }, 5000);
+  }
+
+  async saveSettings() {
+    try {
+      await chrome.storage.sync.set({
+        secureGptSettings: this.settings
+      });
+      console.log('Settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
   }
 
   openConfigPage() {
