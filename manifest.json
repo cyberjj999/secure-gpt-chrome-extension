@@ -54,20 +54,20 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["icons/*.png"],
-      "matches": [
-        "https://chat.openai.com/*",
-        "https://chatgpt.com/*",
-        "https://claude.ai/*",
-        "https://gemini.google.com/*",
-        "https://ai.meta.com/*",
-        "https://mistral.ai/*",
-        "https://x.ai/*",
-        "https://cohere.com/*",
-        "https://www.perplexity.ai/*"
+      "web_accessible_resources": [
+        {
+          "resources": ["icons/*.png", "config.html", "config.css", "config.js"],
+          "matches": [
+            "https://chat.openai.com/*",
+            "https://chatgpt.com/*",
+            "https://claude.ai/*",
+            "https://gemini.google.com/*",
+            "https://ai.meta.com/*",
+            "https://mistral.ai/*",
+            "https://x.ai/*",
+            "https://cohere.com/*",
+            "https://www.perplexity.ai/*"
+          ]
+        }
       ]
-    }
-  ]
 }

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureGPT - Pattern Configuration</title>
+  <link rel="stylesheet" href="config.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <img src="icons/icon32.png" alt="SecureGPT" class="logo-icon">
+          <h1>SecureGPT Configuration</h1>
+        </div>
+        <div class="header-actions">
+          <button id="backToPopup" class="back-btn">← Back to Extension</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="settings-section">
+        <h2>General Settings</h2>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label class="setting-label">
+              <input type="checkbox" id="enabledToggle" class="toggle-input">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Enable Protection</span>
+            </label>
+          </div>
+          
+          <div class="setting-item">
+            <label class="setting-label">
+              <input type="checkbox" id="notificationsToggle" class="toggle-input">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Show Notifications</span>
+            </label>
+          </div>
+          
+          <div class="setting-item">
+            <label class="setting-label">
+              <input type="checkbox" id="autoScanToggle" class="toggle-input">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Auto-scan while typing</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="patterns-section">
+        <h2>Detection Patterns</h2>
+        <div class="patterns-table">
+          <div class="table-header">
+            <div class="col-enable">Enable</div>
+            <div class="col-pattern">Pattern Type</div>
+            <div class="col-placeholder">Custom Placeholder</div>
+            <div class="col-test">Test & Ignore</div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-email" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Email Addresses</span>
+              <span class="pattern-example">user@example.com</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-email" class="placeholder-input" placeholder="[EMAIL_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-email" class="test-input" placeholder="test@example.com">
+              <button class="test-btn" data-pattern="email">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-phone" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">US Phone Numbers</span>
+              <span class="pattern-example">(555) 123-4567</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-phone" class="placeholder-input" placeholder="[PHONE_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-phone" class="test-input" placeholder="(555) 123-4567">
+              <button class="test-btn" data-pattern="phone">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-phoneInternational" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">International Phone</span>
+              <span class="pattern-example">+1-555-123-4567</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-phoneInternational" class="placeholder-input" placeholder="[PHONE_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-phoneInternational" class="test-input" placeholder="+1-555-123-4567">
+              <button class="test-btn" data-pattern="phoneInternational">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-ssn" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Social Security Numbers</span>
+              <span class="pattern-example">123-45-6789</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-ssn" class="placeholder-input" placeholder="[SSN_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-ssn" class="test-input" placeholder="123-45-6789">
+              <button class="test-btn" data-pattern="ssn">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-creditCard" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Credit Card Numbers</span>
+              <span class="pattern-example">4111 1111 1111 1111</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-creditCard" class="placeholder-input" placeholder="[CREDIT_CARD_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-creditCard" class="test-input" placeholder="4111 1111 1111 1111">
+              <button class="test-btn" data-pattern="creditCard">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-creditCardGeneric" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Generic Card Numbers</span>
+              <span class="pattern-example">5204699957677422</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-creditCardGeneric" class="placeholder-input" placeholder="[CREDIT_CARD_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-creditCardGeneric" class="test-input" placeholder="5204699957677422">
+              <button class="test-btn" data-pattern="creditCardGeneric">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-apiKey" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">API Keys</span>
+              <span class="pattern-example">sk-1234567890abcdef</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-apiKey" class="placeholder-input" placeholder="[API_KEY_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-apiKey" class="test-input" placeholder="sk-1234567890abcdef">
+              <button class="test-btn" data-pattern="apiKey">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-ipAddress" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">IP Addresses</span>
+              <span class="pattern-example">192.168.1.1</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-ipAddress" class="placeholder-input" placeholder="[IP_ADDRESS_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-ipAddress" class="test-input" placeholder="192.168.1.1">
+              <button class="test-btn" data-pattern="ipAddress">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-bankAccount" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Bank Account Numbers</span>
+              <span class="pattern-example">Account: 1234567890</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-bankAccount" class="placeholder-input" placeholder="[ACCOUNT_NUMBER_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-bankAccount" class="test-input" placeholder="Account: 1234567890">
+              <button class="test-btn" data-pattern="bankAccount">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-passport" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Passport Numbers</span>
+              <span class="pattern-example">A1234567</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-passport" class="placeholder-input" placeholder="[PASSPORT_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-passport" class="test-input" placeholder="A1234567">
+              <button class="test-btn" data-pattern="passport">Test</button>
+            </div>
+          </div>
+          
+          <div class="pattern-row">
+            <div class="col-enable">
+              <input type="checkbox" id="pattern-address" class="pattern-checkbox">
+            </div>
+            <div class="col-pattern">
+              <span class="pattern-name">Street Addresses</span>
+              <span class="pattern-example">123 Main Street</span>
+            </div>
+            <div class="col-placeholder">
+              <input type="text" id="placeholder-address" class="placeholder-input" placeholder="[ADDRESS_REDACTED]">
+            </div>
+            <div class="col-test">
+              <input type="text" id="test-address" class="test-input" placeholder="123 Main Street">
+              <button class="test-btn" data-pattern="address">Test</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="actions-section">
+        <div class="action-buttons">
+          <button id="saveButton" class="save-button">Save Settings</button>
+          <button id="resetButton" class="reset-button">Reset to Defaults</button>
+        </div>
+        <div class="status-message" id="statusMessage"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p class="version">SecureGPT v1.0.0</p>
+      <p class="description">Protecting your privacy in AI conversations</p>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+</body>
+</html>
