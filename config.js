@@ -303,7 +303,7 @@ class ConfigManager {
 
   showTestResult(patternName, message, type) {
     // Remove existing result
-    const testContainer = document.querySelector(`#test-${patternName}`).parentNode;
+    const testContainer = document.querySelector(`#test-${patternName}`).parentNode.parentNode; // Go up to col-test
     const existingResult = testContainer.querySelector('.test-result');
     if (existingResult) {
       existingResult.remove();
@@ -314,7 +314,7 @@ class ConfigManager {
     result.className = `test-result ${type}`;
     result.textContent = message;
     
-    // Insert at the beginning of the test container (above input and button)
+    // Insert at the beginning of the test container (above test-group)
     testContainer.insertBefore(result, testContainer.firstChild);
 
     // Auto-remove after 5 seconds

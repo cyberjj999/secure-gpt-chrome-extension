@@ -311,6 +311,12 @@ body {
 
 .col-test {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-group {
+  display: flex;
   gap: 8px;
   align-items: center;
 }
