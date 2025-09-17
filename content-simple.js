@@ -263,7 +263,7 @@ class SecureGPTSimple {
     
     // Create De-PII button
     this.dePiiButton = document.createElement('button');
-    this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16.png') + '" width="16" height="16">';
+    this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
     this.dePiiButton.title = 'De-PII: Remove sensitive information';
     this.dePiiButton.style.cssText = `
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -325,7 +325,7 @@ class SecureGPTSimple {
     
       // Visual feedback on button
       const originalButtonText = this.dePiiButton.innerHTML;
-      this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16.png') + '" width="16" height="16">';
+      this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
       this.dePiiButton.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
       
       setTimeout(() => {
