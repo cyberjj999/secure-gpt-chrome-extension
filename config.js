@@ -97,14 +97,17 @@ class ConfigManager {
     // Main toggles
     document.getElementById('enabledToggle').addEventListener('change', (e) => {
       this.settings.enabled = e.target.checked;
+      this.autoSave();
     });
 
     document.getElementById('notificationsToggle').addEventListener('change', (e) => {
       this.settings.showNotifications = e.target.checked;
+      this.autoSave();
     });
 
     document.getElementById('autoScanToggle').addEventListener('change', (e) => {
       this.settings.autoScan = e.target.checked;
+      this.autoSave();
     });
 
     // Pattern checkboxes
@@ -113,6 +116,7 @@ class ConfigManager {
       if (checkbox) {
         checkbox.addEventListener('change', (e) => {
           this.settings.patterns[pattern] = e.target.checked;
+          this.autoSave();
         });
       }
     });
@@ -123,6 +127,7 @@ class ConfigManager {
       if (input) {
         input.addEventListener('input', (e) => {
           this.settings.placeholders[pattern] = e.target.value || this.settings.placeholders[pattern];
+          this.autoSave();
         });
       }
     });
@@ -133,6 +138,7 @@ class ConfigManager {
       if (checkbox) {
         checkbox.addEventListener('change', (e) => {
           this.settings.websites[website] = e.target.checked;
+          this.autoSave();
         });
       }
     });
@@ -335,6 +341,48 @@ class ConfigManager {
     }, 3000);
   }
 
+  async autoSave() {
+    try {
+      await chrome.storage.sync.set({
+        secureGptSettings: this.settings
+      });
+      this.showAutoSaveNotification();
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      this.showStatusMessage('Failed to save settings', 'error');
+    }
+  }
+
+  showAutoSaveNotification() {
+    // Create a temporary notification element
+    const notification = document.createElement('div');
+    notification.className = 'auto-save-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-icon">✓</span>
+        <span class="notification-text">Settings saved automatically</span>
+      </div>
+    `;
+    
+    // Add to the page
+    document.body.appendChild(notification);
+    
+    // Show with animation
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+    
+    // Remove after 2 seconds
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+        }
+      }, 300);
+    }, 2000);
+  }
+
   addToIgnoreList() {
     const ignoreInput = document.getElementById('ignoreInput');
     const text = ignoreInput.value.trim();
@@ -349,12 +397,14 @@ class ConfigManager {
     this.settings.ignoreList.push(text);
     ignoreInput.value = '';
     this.updateIgnoreList();
+    this.autoSave();
     this.showStatusMessage('Added to ignore list', 'success');
   }
 
   removeFromIgnoreList(text) {
     this.settings.ignoreList = this.settings.ignoreList.filter(item => item !== text);
     this.updateIgnoreList();
+    this.autoSave();
     this.showStatusMessage('Removed from ignore list', 'success');
   }
 
