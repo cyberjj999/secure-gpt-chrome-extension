@@ -2,14 +2,21 @@
   "manifest_version": 3,
   "name": "SecureGPT",
   "version": "1.0.0",
-  "description": "Automatically detects and replaces sensitive information (PII, credit cards, API keys) with placeholders when pasting into ChatGPT",
+  "description": "Automatically detects and replaces sensitive information (PII, credit cards, API keys) with placeholders when using AI chat platforms like ChatGPT, Claude, Gemini, and more",
   "permissions": [
     "activeTab",
     "storage"
   ],
   "host_permissions": [
     "https://chat.openai.com/*",
-    "https://chatgpt.com/*"
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://ai.meta.com/*",
+    "https://mistral.ai/*",
+    "https://x.ai/*",
+    "https://cohere.com/*",
+    "https://www.perplexity.ai/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -18,7 +25,14 @@
     {
       "matches": [
         "https://chat.openai.com/*",
-        "https://chatgpt.com/*"
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://ai.meta.com/*",
+        "https://mistral.ai/*",
+        "https://x.ai/*",
+        "https://cohere.com/*",
+        "https://www.perplexity.ai/*"
       ],
       "js": ["content-simple.js"],
       "run_at": "document_end"
@@ -45,7 +59,14 @@
       "resources": ["icons/*.png"],
       "matches": [
         "https://chat.openai.com/*",
-        "https://chatgpt.com/*"
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://ai.meta.com/*",
+        "https://mistral.ai/*",
+        "https://x.ai/*",
+        "https://cohere.com/*",
+        "https://www.perplexity.ai/*"
       ]
     }
   ]

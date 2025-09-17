@@ -94,10 +94,34 @@ class SecureGPTSimple {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              // Look for the prompt textarea div
-              const promptDiv = node.querySelector ? node.querySelector('#prompt-textarea') : null;
-              if (promptDiv || (node.id === 'prompt-textarea')) {
-                this.attachToPromptDiv(promptDiv || node);
+              // Look for various AI input elements
+              const selectors = [
+                '#prompt-textarea', // ChatGPT
+                'textarea[placeholder*="message" i]',
+                'textarea[placeholder*="ask" i]',
+                'textarea[placeholder*="prompt" i]',
+                'textarea[aria-label*="message" i]',
+                'textarea[aria-label*="prompt" i]',
+                'div[contenteditable="true"]',
+                'div[role="textbox"]',
+                'textarea[id*="input"]',
+                'textarea[id*="message"]',
+                'textarea[class*="prompt"]',
+                'textarea[class*="input"]',
+                'textarea[class*="message"]'
+              ];
+              
+              let foundElement = null;
+              for (const selector of selectors) {
+                const element = node.querySelector ? node.querySelector(selector) : null;
+                if (element || (node.matches && node.matches(selector))) {
+                  foundElement = element || node;
+                  break;
+                }
+              }
+              
+              if (foundElement) {
+                this.attachToPromptDiv(foundElement);
               }
               
               // Also check if send button area is added to inject our De-PII button
@@ -119,10 +143,29 @@ class SecureGPTSimple {
   }
 
   checkExistingElements() {
-    // Look for existing prompt div
-    const promptDiv = document.querySelector('#prompt-textarea');
-    if (promptDiv) {
-      this.attachToPromptDiv(promptDiv);
+    // Look for existing prompt divs on various AI platforms
+    const selectors = [
+      '#prompt-textarea', // ChatGPT
+      'textarea[placeholder*="message" i]', // General message textareas
+      'textarea[placeholder*="ask" i]', // Ask prompts
+      'textarea[placeholder*="prompt" i]', // Prompt textareas
+      'textarea[aria-label*="message" i]', // Aria label message
+      'textarea[aria-label*="prompt" i]', // Aria label prompt
+      'div[contenteditable="true"]', // Contenteditable divs
+      'div[role="textbox"]', // Textbox role divs
+      'textarea[id*="input"]', // Input textareas
+      'textarea[id*="message"]', // Message textareas
+      'textarea[class*="prompt"]', // Prompt class textareas
+      'textarea[class*="input"]', // Input class textareas
+      'textarea[class*="message"]' // Message class textareas
+    ];
+    
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        this.attachToPromptDiv(element);
+        break; // Only attach to the first found element
+      }
     }
     
     // Inject De-PII button
@@ -254,10 +297,25 @@ class SecureGPTSimple {
     // Don't inject if already exists or extension is disabled
     if (this.dePiiButton || !this.settings.enabled) return;
     
-    // Look for the send button area
-    const sendButton = document.querySelector('[data-testid="send-button"]') || 
-                      document.querySelector('button[aria-label*="Send"]') ||
-                      document.querySelector('button svg[class*="send"]')?.closest('button');
+    // Look for the send button area on various AI platforms
+    const sendButtonSelectors = [
+      '[data-testid="send-button"]', // ChatGPT
+      'button[aria-label*="Send" i]', // General send buttons
+      'button[aria-label*="Submit" i]', // Submit buttons
+      'button[type="submit"]', // Submit type buttons
+      'button svg[class*="send" i]', // Send icon buttons
+      'button svg[class*="arrow" i]', // Arrow icon buttons
+      'button[class*="send" i]', // Send class buttons
+      'button[class*="submit" i]', // Submit class buttons
+      'button[title*="send" i]', // Send title buttons
+      'button[title*="submit" i]' // Submit title buttons
+    ];
+    
+    let sendButton = null;
+    for (const selector of sendButtonSelectors) {
+      sendButton = document.querySelector(selector);
+      if (sendButton) break;
+    }
     
     if (!sendButton) return;
     
@@ -301,7 +359,29 @@ class SecureGPTSimple {
   }
 
   manualDePii() {
-    const promptDiv = document.querySelector('#prompt-textarea');
+    // Look for various AI input elements
+    const selectors = [
+      '#prompt-textarea', // ChatGPT
+      'textarea[placeholder*="message" i]',
+      'textarea[placeholder*="ask" i]',
+      'textarea[placeholder*="prompt" i]',
+      'textarea[aria-label*="message" i]',
+      'textarea[aria-label*="prompt" i]',
+      'div[contenteditable="true"]',
+      'div[role="textbox"]',
+      'textarea[id*="input"]',
+      'textarea[id*="message"]',
+      'textarea[class*="prompt"]',
+      'textarea[class*="input"]',
+      'textarea[class*="message"]'
+    ];
+    
+    let promptDiv = null;
+    for (const selector of selectors) {
+      promptDiv = document.querySelector(selector);
+      if (promptDiv) break;
+    }
+    
     if (!promptDiv) {
       this.showNotification('Could not find input area');
       return;
