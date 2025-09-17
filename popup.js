@@ -124,6 +124,25 @@ class PopupManager {
       });
     });
 
+    // Modal functionality
+    const configureBtn = document.getElementById('configurePatternsBtn');
+    const modal = document.getElementById('patternsModal');
+    const closeModal = document.getElementById('closeModal');
+    const saveModalBtn = document.getElementById('saveModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+
+    configureBtn.addEventListener('click', () => this.openModal());
+    closeModal.addEventListener('click', () => this.closeModal());
+    cancelModalBtn.addEventListener('click', () => this.closeModal());
+    saveModalBtn.addEventListener('click', () => this.saveModalChanges());
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    });
+
     // Save button
     const saveButton = document.getElementById('saveButton');
     saveButton.addEventListener('click', () => this.saveSettings());
@@ -155,7 +174,31 @@ class PopupManager {
       }
     });
 
+    this.updateSummaryStats();
     this.updateStatus();
+  }
+
+  updateSummaryStats() {
+    const enabledCount = Object.values(this.settings.patterns).filter(Boolean).length;
+    document.getElementById('enabledCount').textContent = enabledCount;
+    
+    const enabledPatterns = Object.entries(this.settings.patterns)
+      .filter(([_, enabled]) => enabled)
+      .map(([pattern, _]) => pattern);
+    
+    const enabledPatternsContainer = document.getElementById('enabledPatterns');
+    enabledPatternsContainer.innerHTML = '';
+    
+    if (enabledPatterns.length === 0) {
+      enabledPatternsContainer.innerHTML = '<div style="color: #6c757d; font-size: 12px; font-style: italic;">No patterns enabled</div>';
+    } else {
+      enabledPatterns.forEach(pattern => {
+        const tag = document.createElement('span');
+        tag.className = 'pattern-tag';
+        tag.textContent = pattern.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        enabledPatternsContainer.appendChild(tag);
+      });
+    }
   }
 
   updateStatus() {
@@ -267,6 +310,55 @@ class PopupManager {
         result.remove();
       }
     }, 5000);
+  }
+
+  openModal() {
+    const modal = document.getElementById('patternsModal');
+    
+    // Copy current settings to modal
+    Object.entries(this.settings.patterns).forEach(([pattern, enabled]) => {
+      const checkbox = document.getElementById(`modal-pattern-${pattern}`);
+      if (checkbox) {
+        checkbox.checked = enabled;
+      }
+    });
+
+    Object.entries(this.settings.placeholders).forEach(([pattern, placeholder]) => {
+      const input = document.getElementById(`modal-placeholder-${pattern}`);
+      if (input) {
+        input.value = placeholder;
+      }
+    });
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeModal() {
+    const modal = document.getElementById('patternsModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  saveModalChanges() {
+    // Copy modal settings back to main settings
+    Object.keys(this.settings.patterns).forEach(pattern => {
+      const checkbox = document.getElementById(`modal-pattern-${pattern}`);
+      if (checkbox) {
+        this.settings.patterns[pattern] = checkbox.checked;
+      }
+    });
+
+    Object.keys(this.settings.placeholders).forEach(pattern => {
+      const input = document.getElementById(`modal-placeholder-${pattern}`);
+      if (input) {
+        this.settings.placeholders[pattern] = input.value || this.settings.placeholders[pattern];
+      }
+    });
+
+    this.updateUI();
+    this.closeModal();
+    this.showNotification('Patterns updated successfully!');
   }
 
   resetSettings() {
