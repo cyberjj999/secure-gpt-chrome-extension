@@ -271,11 +271,12 @@ class SecureGPTSimple {
       border-radius: 6px;
       color: white;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
       margin-right: 8px;
-      padding: 8px 10px;
+      padding: 8px 12px;
       transition: all 0.2s;
       box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+      font-weight: 500;
     `;
     
     // Hover effect
