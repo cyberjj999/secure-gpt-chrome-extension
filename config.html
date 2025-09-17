@@ -9,13 +9,15 @@
 <body>
   <div class="container">
     <header class="header">
-      <div class="header-content">
-        <div class="logo">
-          <img src="icons/icon32.png" alt="SecureGPT" class="logo-icon">
-          <h1>SecureGPT Configuration</h1>
-        </div>
-        <div class="header-actions">
-          <button id="backToPopup" class="back-btn">← Back to Extension</button>
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <img src="icons/icon32.png" alt="SecureGPT" class="logo-icon">
+            <h1>SecureGPT Configuration</h1>
+          </div>
+          <div class="header-actions">
+            <button id="backToPopup" class="back-btn">← Back to Extension</button>
+          </div>
         </div>
       </div>
     </header>
@@ -247,14 +249,14 @@
             </div>
           </div>
         </div>
-      </section>
-
-      <section class="actions-section">
-        <div class="action-buttons">
-          <button id="saveButton" class="save-button">Save Settings</button>
-          <button id="resetButton" class="reset-button">Reset to Defaults</button>
+        
+        <div class="patterns-actions">
+          <div class="action-buttons">
+            <button id="saveButton" class="save-button">Save Settings</button>
+            <button id="resetButton" class="reset-button">Reset to Defaults</button>
+          </div>
+          <div class="status-message" id="statusMessage"></div>
         </div>
-        <div class="status-message" id="statusMessage"></div>
       </section>
     </main>
 

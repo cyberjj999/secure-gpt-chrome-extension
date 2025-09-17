@@ -383,6 +383,49 @@ main {
   margin: 2px 4px 2px 0;
 }
 
+.config-info {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.config-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+}
+
+.config-info p {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 0 0 8px 0;
+}
+
+.config-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.config-features li {
+  font-size: 11px;
+  color: #495057;
+  margin: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.config-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #667eea;
+  font-weight: bold;
+}
+
 .configure-btn {
   width: 100%;
   padding: 10px 16px;
@@ -410,48 +453,6 @@ main {
 }
 
 
-/* Actions Section */
-.actions-section {
-  margin-top: 20px;
-  display: flex;
-  gap: 8px;
-}
-
-.save-button, .reset-button {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.save-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.save-button:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-}
-
-.save-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.reset-button {
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-  color: #667eea;
-  border: 1px solid #667eea;
-}
-
-.reset-button:hover {
-  background: linear-gradient(135deg, #f0f2ff 0%, #e8ebff 100%);
-  border-color: #5a6fd8;
-}
 
 /* Footer */
 footer {

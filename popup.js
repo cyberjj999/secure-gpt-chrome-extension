@@ -128,13 +128,6 @@ class PopupManager {
     const openConfigBtn = document.getElementById('openConfigPageBtn');
     openConfigBtn.addEventListener('click', () => this.openConfigPage());
 
-    // Save button
-    const saveButton = document.getElementById('saveButton');
-    saveButton.addEventListener('click', () => this.saveSettings());
-
-    // Reset button
-    const resetButton = document.getElementById('resetButton');
-    resetButton.addEventListener('click', () => this.resetSettings());
   }
 
   updateUI() {
