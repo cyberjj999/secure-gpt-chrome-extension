@@ -303,7 +303,8 @@ class ConfigManager {
 
   showTestResult(patternName, message, type) {
     // Remove existing result
-    const existingResult = document.querySelector(`#test-${patternName}`).parentNode.querySelector('.test-result');
+    const testContainer = document.querySelector(`#test-${patternName}`).parentNode;
+    const existingResult = testContainer.querySelector('.test-result');
     if (existingResult) {
       existingResult.remove();
     }
@@ -313,9 +314,8 @@ class ConfigManager {
     result.className = `test-result ${type}`;
     result.textContent = message;
     
-    // Insert after the test input
-    const testInput = document.getElementById(`test-${patternName}`);
-    testInput.parentNode.appendChild(result);
+    // Insert at the beginning of the test container (above input and button)
+    testContainer.insertBefore(result, testContainer.firstChild);
 
     // Auto-remove after 5 seconds
     setTimeout(() => {
