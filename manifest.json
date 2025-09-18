@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SecureGPT",
   "version": "1.0.0",
-  "description": "Automatically detects and replaces sensitive information (PII, credit cards, API keys) with placeholders when using AI chat platforms like ChatGPT, Claude, Gemini, and more",
+  "description": "Protect your privacy in AI chats! Auto-detects and removes emails, credit cards, SSNs with placeholders on ChatGPT, Claude & more.",
   "permissions": [
     "activeTab",
     "storage"
