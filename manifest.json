@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "SecureGPT",
+  "name": "SecureGPT: Privacy Protection for AI Chat Platforms (ChatGPT, Claude, Gemini, Perplexity, etc.)",
   "version": "1.0.0",
   "description": "Protect your privacy in AI chats! Auto-detects and removes emails, credit cards, SSNs with placeholders on ChatGPT, Claude & more.",
   "permissions": [
