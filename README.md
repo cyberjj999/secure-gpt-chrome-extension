@@ -130,7 +130,62 @@ Add specific text patterns that should never be redacted:
 - **No Data Collection**: SecureGPT never sends your data to external servers
 - **No Storage**: Sensitive information is immediately replaced and never stored
 - **Open Source**: Full source code is available for review
-- **Minimal Permissions**: Only requests necessary permissions for ChatGPT interaction
+- **Minimal Permissions**: Only requests necessary permissions for AI platform interaction
+
+## 📋 Chrome Web Store Privacy Compliance
+
+### Single Purpose
+SecureGPT has a single, narrow purpose: **automatically detect and replace sensitive information (PII, credit cards, API keys, etc.) with safe placeholders when using AI chat platforms**. This protects user privacy by preventing accidental sharing of sensitive data with AI services.
+
+### Permission Justifications
+
+#### activeTab Permission
+**Purpose**: Required to inject content scripts into AI chat platform tabs and monitor text input fields for sensitive information detection.
+
+**Justification**: The extension needs to access the active tab to:
+- Monitor text input fields on AI chat platforms
+- Inject the De-PII button into chat interfaces
+- Detect and replace sensitive information in real-time
+- Work across multiple AI platforms (ChatGPT, Claude, Gemini, etc.)
+
+#### storage Permission
+**Purpose**: Required to save user configuration settings and preferences.
+
+**Justification**: The extension needs to store:
+- User's detection pattern preferences (enabled/disabled patterns)
+- Custom placeholder text for each data type
+- Website management settings (which AI platforms to protect)
+- Ignore list entries
+- General settings (notifications, auto-scan, etc.)
+
+#### Host Permissions
+**Purpose**: Required to inject content scripts and access AI chat platform websites.
+
+**Justification**: The extension requires access to these specific AI platforms:
+- `https://chat.openai.com/*` and `https://chatgpt.com/*` - ChatGPT platforms
+- `https://claude.ai/*` - Anthropic Claude
+- `https://gemini.google.com/*` - Google Gemini
+- `https://ai.meta.com/*` - Meta LLaMA
+- `https://mistral.ai/*` - Mistral AI
+- `https://x.ai/*` - xAI Grok
+- `https://cohere.com/*` - Cohere
+- `https://www.perplexity.ai/*` - Perplexity AI
+
+Each host permission is necessary to:
+- Inject content scripts for sensitive data detection
+- Access text input fields on these platforms
+- Provide real-time protection across all supported AI services
+- Maintain consistent functionality across different AI platforms
+
+### Remote Code Usage
+**No Remote Code**: This extension does not use any remote code. All JavaScript, CSS, and HTML files are included in the extension package. No external scripts, modules, or evaluated code strings are used.
+
+**Verification**: All code is:
+- Included in the extension package
+- No external script references
+- No dynamic code evaluation
+- No remote module imports
+- No external API calls for code execution
 
 ## 🛠️ Technical Details
 
