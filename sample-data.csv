@@ -1,0 +1,11 @@
+Pattern,Type,Description
+john.doe@example.com,Email,Sample email address
+jane.smith@company.org,Email,Another email
+555-123-4567,Phone,US phone number
++1-555-987-6543,Phone,International format
+123-45-6789,SSN,Social security number
+4532-1234-5678-9012,Credit Card,Sample credit card
+account_12345,Account,Account identifier
+user_jane_doe,Username,Sample username
+password123,Password,Weak password example
+api_key_abc123xyz,API Key,Sample API key

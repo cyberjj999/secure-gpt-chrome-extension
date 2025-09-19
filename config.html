@@ -361,6 +361,8 @@
         <div class="ignore-list-section">
           <h3>Ignore List</h3>
           <p class="section-description">Add specific text patterns that should never be redacted, even if they match detection patterns.</p>
+          
+          <!-- Manual Entry -->
           <div class="ignore-list-container">
             <div class="ignore-input-group">
               <input type="text" id="ignoreInput" placeholder="Enter text to ignore (e.g., test@example.com)" class="ignore-input">
@@ -368,6 +370,94 @@
             </div>
             <div class="ignore-list" id="ignoreList">
               <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- CSV Upload Section -->
+          <div class="csv-upload-section">
+            <h4>CSV Upload</h4>
+            <p class="csv-description">Upload a CSV file to bulk import ignore patterns. You can specify which column contains the patterns and which rows to import.</p>
+            
+            <div class="csv-upload-container">
+              <div class="csv-file-input-group">
+                <input type="file" id="csvFileInput" accept=".csv" class="csv-file-input">
+                <label for="csvFileInput" class="csv-file-label">
+                  <span class="csv-file-icon">📁</span>
+                  <span class="csv-file-text">Choose CSV File</span>
+                </label>
+              </div>
+              
+              <div class="csv-options" id="csvOptions" style="display: none;">
+                <!-- CSV Table Container -->
+                <div class="csv-table-container">
+                  <div class="csv-table-header">
+                    <h4>CSV Data - Select cells, rows, or columns to import</h4>
+                    <div class="csv-info">
+                      <span id="csvRowCount">0 rows</span> × <span id="csvColCount">0 columns</span>
+                      | <span id="csvSelectedCount">0 selected</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Selection Controls -->
+                  <div class="csv-selection-controls">
+                    <div class="control-group">
+                      <button id="selectAllBtn" class="control-btn">Select All</button>
+                      <button id="clearSelectionBtn" class="control-btn">Clear Selection</button>
+                      <button id="selectRowsBtn" class="control-btn">Select Rows</button>
+                      <button id="selectColumnsBtn" class="control-btn">Select Columns</button>
+                    </div>
+                    
+                    <div class="control-group">
+                      <label class="control-label">
+                        <input type="checkbox" id="treatFirstRowAsHeader" checked>
+                        First row is header
+                      </label>
+                      <label class="control-label">
+                        <input type="checkbox" id="showRowNumbers" checked>
+                        Show row numbers
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Interactive CSV Table -->
+                  <div class="csv-table-wrapper" id="csvTableWrapper">
+                    <table id="csvInteractiveTable" class="csv-interactive-table">
+                      <thead id="csvTableHead"></thead>
+                      <tbody id="csvTableBody"></tbody>
+                    </table>
+                  </div>
+                  
+                  <!-- Selection Summary -->
+                  <div class="csv-selection-summary" id="csvSelectionSummary" style="display: none;">
+                    <h5>Import Preview</h5>
+                    <div class="selection-stats">
+                      <span class="stat-item">
+                        <span class="stat-number" id="selectedCellsCount">0</span>
+                        <span class="stat-label">cells selected</span>
+                      </span>
+                      <span class="stat-item">
+                        <span class="stat-number" id="uniqueValuesCount">0</span>
+                        <span class="stat-label">unique values</span>
+                      </span>
+                    </div>
+                    <div class="preview-values" id="previewValues"></div>
+                  </div>
+                </div>
+                
+                <div class="csv-actions">
+                  <button id="csvImportBtn" class="csv-import-btn" disabled>
+                    Import <span id="importCount">0</span> Selected Items
+                  </button>
+                  <button id="csvCancelBtn" class="csv-cancel-btn">Cancel</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Export Section -->
+            <div class="csv-export-section">
+              <h4>Export Ignore List</h4>
+              <p class="csv-description">Export your current ignore list to a CSV file for backup or sharing.</p>
+              <button id="csvExportBtn" class="csv-export-btn">Export to CSV</button>
             </div>
           </div>
         </div>
