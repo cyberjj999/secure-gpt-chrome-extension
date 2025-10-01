@@ -1,0 +1,122 @@
+{
+  "ignoreList": [
+    "john.doe@example.com",
+    "jane.smith@company.org", 
+    "555-123-4567",
+    "+1-555-987-6543",
+    "123-45-6789",
+    "4532-1234-5678-9012",
+    "account_12345",
+    "user_jane_doe",
+    "password123",
+    "api_key_abc123xyz"
+  ],
+  "ignoreListMetadata": {
+    "john.doe@example.com": {
+      "id": "1703123456789",
+      "source": "manual",
+      "type": "email",
+      "addedDate": "2024-01-15T10:30:00.000Z",
+      "description": "Email address"
+    },
+    "jane.smith@company.org": {
+      "id": "1703123456790",
+      "source": "csv",
+      "type": "email", 
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Email address",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "555-123-4567": {
+      "id": "1703123456791",
+      "source": "csv",
+      "type": "phone",
+      "addedDate": "2024-01-15T11:00:00.000Z", 
+      "description": "Phone number",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "+1-555-987-6543": {
+      "id": "1703123456792",
+      "source": "csv",
+      "type": "phone",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Phone number", 
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "123-45-6789": {
+      "id": "1703123456793",
+      "source": "csv",
+      "type": "ssn",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Social Security Number",
+      "csvImport": {
+        "fileName": "sample-data.csv", 
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "4532-1234-5678-9012": {
+      "id": "1703123456794",
+      "source": "csv",
+      "type": "creditcard",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Credit card number",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "account_12345": {
+      "id": "1703123456795",
+      "source": "csv",
+      "type": "other",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Text pattern",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "user_jane_doe": {
+      "id": "1703123456796",
+      "source": "csv",
+      "type": "other",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Text pattern",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "password123": {
+      "id": "1703123456797",
+      "source": "csv",
+      "type": "other",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Text pattern",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    },
+    "api_key_abc123xyz": {
+      "id": "1703123456798",
+      "source": "csv",
+      "type": "other",
+      "addedDate": "2024-01-15T11:00:00.000Z",
+      "description": "Text pattern",
+      "csvImport": {
+        "fileName": "sample-data.csv",
+        "importDate": "2024-01-15T11:00:00.000Z"
+      }
+    }
+  }
+}

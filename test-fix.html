@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ignore List Fix</title>
+</head>
+<body>
+    <h1>Testing Ignore List Metadata Fix</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Simulate the ConfigManager class with the fix
+        class TestConfigManager {
+            constructor() {
+                this.settings = {
+                    ignoreList: [],
+                    ignoreListMetadata: {} // This should be initialized
+                };
+            }
+            
+            // Simulate loading settings without ignoreListMetadata
+            loadSettings() {
+                // Simulate old settings without ignoreListMetadata
+                const oldSettings = {
+                    ignoreList: ['test@example.com', '555-123-4567'],
+                    // ignoreListMetadata is missing!
+                };
+                
+                // Apply the fix
+                this.settings = { 
+                    ...this.settings, 
+                    ...oldSettings,
+                    ignoreListMetadata: oldSettings.ignoreListMetadata || {}
+                };
+            }
+            
+            // Test the import method that was failing
+            testImport() {
+                const testPatterns = ['Hawaiian Airlines Logo Store', 'Hawaiian Airlines branded merchandise'];
+                
+                // Ensure ignoreListMetadata exists (the fix)
+                if (!this.settings.ignoreListMetadata) {
+                    this.settings.ignoreListMetadata = {};
+                }
+                
+                testPatterns.forEach(pattern => {
+                    if (!this.settings.ignoreList.includes(pattern)) {
+                        this.settings.ignoreList.push(pattern);
+                        
+                        // This should not throw an error now
+                        this.settings.ignoreListMetadata[pattern] = {
+                            id: Date.now().toString(),
+                            source: 'csv',
+                            type: 'other',
+                            addedDate: new Date().toISOString(),
+                            description: 'Text pattern'
+                        };
+                    }
+                });
+                
+                return 'Success! No errors thrown.';
+            }
+        }
+        
+        // Run the test
+        const configManager = new TestConfigManager();
+        configManager.loadSettings();
+        
+        try {
+            const result = configManager.testImport();
+            document.getElementById('test-results').innerHTML = `
+                <p style="color: green;">✅ ${result}</p>
+                <p>Ignore List: ${JSON.stringify(configManager.settings.ignoreList)}</p>
+                <p>Metadata Keys: ${Object.keys(configManager.settings.ignoreListMetadata).join(', ')}</p>
+            `;
+        } catch (error) {
+            document.getElementById('test-results').innerHTML = `
+                <p style="color: red;">❌ Error: ${error.message}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

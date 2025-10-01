@@ -1,6 +1,6 @@
 # SecureGPT Chrome Extension 🛡️
 
-A Chrome extension that automatically detects and replaces sensitive information (PII, credit cards, API keys, etc.) with placeholders when interacting with AI chat platforms, protecting your privacy during AI conversations.
+A Chrome extension that automatically detects and removes sensitive information (PII, credit cards, API keys, etc.) when users are interacting with AI chat platforms, protecting their privacy during AI conversations.
 
 ## 🚀 Features
 
@@ -20,6 +20,7 @@ A Chrome extension that automatically detects and replaces sensitive information
 - **Automatic Replacement**: Replaces detected sensitive data with customizable placeholders
 - **Auto-Save Settings**: All configuration changes save automatically with visual notifications
 - **Customizable Placeholders**: Set your own replacement text for each pattern type
+- **Custom Detection Patterns**: Add your own text patterns and advanced regex patterns for custom detection
 - **Website Management**: Enable/disable protection on specific AI platforms
 - **Ignore List**: Add specific text patterns that should never be redacted
 - **Test Detection**: Live testing of detection patterns with instant feedback
@@ -117,6 +118,13 @@ Live testing of detection patterns with instant feedback:
 - Enter test text in any pattern's test field
 - Click "Test" to see if it would be detected
 - Get immediate feedback on detection results
+
+#### Custom Detection Patterns
+Add your own text patterns for custom detection:
+- **Specific Text & Phrases**: Add exact text or phrases that should be replaced with placeholders. Perfect for company names, internal project codes, or any specific sensitive information
+- **Advanced Pattern Matching (Regex)**: For technical users - add custom regex patterns to detect and replace content matching specific patterns. Great for complex formats like employee IDs, internal codes, or structured data
+- **Pattern Testing**: Test your regex patterns before adding them to ensure they work correctly
+- **Easy Management**: Add, remove, and manage your custom patterns with a simple interface
 
 #### Ignore List
 Add specific text patterns that should never be redacted:

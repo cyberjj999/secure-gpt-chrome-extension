@@ -42,7 +42,12 @@ class ConfigManager {
         passport: '[PASSPORT_REDACTED]',
         address: '[ADDRESS_REDACTED]'
       },
-      ignoreList: []
+      ignoreList: [],
+      ignoreListMetadata: {}, // Store metadata for each ignore item
+      customPatterns: {
+        hardcodedStrings: [], // Array of {string, placeholder, id}
+        regexPatterns: [] // Array of {pattern, placeholder, name, id}
+      }
     };
     
     this.init();
@@ -57,41 +62,21 @@ class ConfigManager {
   async loadSettings() {
     try {
       const response = await chrome.runtime.sendMessage({ action: 'getSettings' });
-      this.settings = {
-        enabled: true,
-        showNotifications: true,
-        autoScan: true,
-        patterns: {
-          email: true,
-          phone: true,
-          phoneInternational: true,
-          ssn: true,
-          creditCard: true,
-          creditCardGeneric: true,
-          apiKey: true,
-          ipAddress: true,
-          bankAccount: true,
-          passport: true,
-          address: true
-        },
-        placeholders: {
-          email: '[EMAIL_REDACTED]',
-          phone: '[PHONE_REDACTED]',
-          phoneInternational: '[PHONE_REDACTED]',
-          ssn: '[SSN_REDACTED]',
-          creditCard: '[CREDIT_CARD_REDACTED]',
-          creditCardGeneric: '[CREDIT_CARD_REDACTED]',
-          apiKey: '[API_KEY_REDACTED]',
-          ipAddress: '[IP_ADDRESS_REDACTED]',
-          bankAccount: '[ACCOUNT_NUMBER_REDACTED]',
-          passport: '[PASSPORT_REDACTED]',
-          address: '[ADDRESS_REDACTED]'
-        },
-        ...response
-      };
+      
+      if (response && response.settings) {
+        // Merge with existing settings, ensuring ignoreListMetadata exists
+        this.settings = { 
+          ...this.settings, 
+          ...response.settings,
+          ignoreListMetadata: response.settings.ignoreListMetadata || {}
+        };
+      }
     } catch (error) {
       console.error('Failed to load settings:', error);
-      // Use defaults
+      // Use defaults - ensure ignoreListMetadata exists
+      if (!this.settings.ignoreListMetadata) {
+        this.settings.ignoreListMetadata = {};
+      }
     }
   }
 
@@ -167,6 +152,29 @@ class ConfigManager {
       }
     });
 
+    // Enhanced ignore list controls
+    const ignoreSearchInput = document.getElementById('ignoreSearchInput');
+    const ignoreFilterSelect = document.getElementById('ignoreFilterSelect');
+    const ignoreSortSelect = document.getElementById('ignoreSortSelect');
+
+    if (ignoreSearchInput) {
+      ignoreSearchInput.addEventListener('input', () => {
+        this.filterIgnoreList();
+      });
+    }
+
+    if (ignoreFilterSelect) {
+      ignoreFilterSelect.addEventListener('change', () => {
+        this.filterIgnoreList();
+      });
+    }
+
+    if (ignoreSortSelect) {
+      ignoreSortSelect.addEventListener('change', () => {
+        this.sortIgnoreList();
+      });
+    }
+
     // Action buttons
     document.getElementById('saveButton').addEventListener('click', () => this.saveSettings());
     document.getElementById('resetButton').addEventListener('click', () => this.resetSettings());
@@ -174,6 +182,9 @@ class ConfigManager {
 
     // CSV upload functionality
     this.setupCSVUpload();
+    
+    // Custom patterns functionality
+    this.setupCustomPatterns();
   }
 
   updateUI() {
@@ -208,6 +219,9 @@ class ConfigManager {
 
     // Update ignore list
     this.updateIgnoreList();
+    
+    // Update custom patterns
+    this.updateCustomPatterns();
   }
 
   async saveSettings() {
@@ -400,6 +414,22 @@ class ConfigManager {
     }
     
     this.settings.ignoreList.push(text);
+    
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+    
+    // Add metadata for the new item
+    const itemId = Date.now().toString();
+    this.settings.ignoreListMetadata[text] = {
+      id: itemId,
+      source: 'manual',
+      type: this.detectPatternType(text),
+      addedDate: new Date().toISOString(),
+      description: this.generateDescription(text)
+    };
+    
     ignoreInput.value = '';
     this.updateIgnoreList();
     this.autoSave();
@@ -408,6 +438,12 @@ class ConfigManager {
 
   removeFromIgnoreList(text) {
     this.settings.ignoreList = this.settings.ignoreList.filter(item => item !== text);
+    
+    // Clean up metadata
+    if (this.settings.ignoreListMetadata[text]) {
+      delete this.settings.ignoreListMetadata[text];
+    }
+    
     this.updateIgnoreList();
     this.autoSave();
     this.showStatusMessage('Removed from ignore list', 'success');
@@ -415,22 +451,246 @@ class ConfigManager {
 
   updateIgnoreList() {
     const ignoreListDiv = document.getElementById('ignoreList');
+    const ignoreListCount = document.getElementById('ignoreListCount');
+    const ignoreListSource = document.getElementById('ignoreListSource');
+    
     ignoreListDiv.innerHTML = '';
     
     if (this.settings.ignoreList.length === 0) {
-      ignoreListDiv.innerHTML = '<div style="color: #6c757d; font-style: italic; padding: 8px;">No items in ignore list</div>';
+      ignoreListDiv.innerHTML = `
+        <div class="ignore-list-empty">
+          <div class="ignore-list-empty-icon">📝</div>
+          <div class="ignore-list-empty-title">No items in ignore list</div>
+          <div class="ignore-list-empty-description">Add patterns manually or import from CSV to get started</div>
+        </div>
+      `;
+      ignoreListCount.textContent = '0 items';
+      ignoreListSource.textContent = '0 manual, 0 CSV';
       return;
     }
     
-    this.settings.ignoreList.forEach(text => {
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'ignore-item';
-      itemDiv.innerHTML = `
-        <span class="ignore-item-text" title="${text}">${text}</span>
-        <button class="ignore-item-remove" onclick="configManager.removeFromIgnoreList('${text}')">×</button>
-      `;
-      ignoreListDiv.appendChild(itemDiv);
+    // Get filtered and sorted items
+    const filteredItems = this.getFilteredIgnoreItems();
+    const sortedItems = this.getSortedIgnoreItems(filteredItems);
+    
+    // Group items by source
+    const groupedItems = this.groupIgnoreItemsBySource(sortedItems);
+    
+    // Update statistics
+    const manualCount = this.settings.ignoreList.filter(item => 
+      this.settings.ignoreListMetadata[item]?.source === 'manual'
+    ).length;
+    const csvCount = this.settings.ignoreList.length - manualCount;
+    
+    ignoreListCount.textContent = `${this.settings.ignoreList.length} items`;
+    ignoreListSource.textContent = `${manualCount} manual, ${csvCount} CSV`;
+    
+    // Render grouped items
+    Object.keys(groupedItems).forEach(source => {
+      if (groupedItems[source].length === 0) return;
+      
+      // Add group header
+      const headerDiv = document.createElement('div');
+      headerDiv.className = `ignore-group-header ${source}`;
+      headerDiv.textContent = `${source.charAt(0).toUpperCase() + source.slice(1)} Entries (${groupedItems[source].length})`;
+      ignoreListDiv.appendChild(headerDiv);
+      
+      // Add items in this group
+      groupedItems[source].forEach(text => {
+        const itemDiv = this.createIgnoreItemElement(text);
+        ignoreListDiv.appendChild(itemDiv);
+      });
     });
+  }
+
+  createIgnoreItemElement(text) {
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+    
+    const metadata = this.settings.ignoreListMetadata[text] || {
+      source: 'manual',
+      type: 'other',
+      addedDate: new Date().toISOString(),
+      description: ''
+    };
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'ignore-item';
+    itemDiv.innerHTML = `
+      <div class="ignore-item-content">
+        <div class="ignore-item-main">
+          <span class="ignore-item-text" title="${text}">${text}</span>
+          <div class="ignore-item-badges">
+            <span class="ignore-item-badge ${metadata.source}">${metadata.source}</span>
+            <span class="ignore-item-badge ${metadata.type}">${metadata.type}</span>
+          </div>
+        </div>
+        <div class="ignore-item-meta">
+          <div class="ignore-item-source">
+            <span>📅</span>
+            <span class="ignore-item-date">${this.formatDate(metadata.addedDate)}</span>
+          </div>
+          ${metadata.description ? `<span>${metadata.description}</span>` : ''}
+        </div>
+      </div>
+      <div class="ignore-item-actions">
+        <button class="ignore-item-edit" onclick="configManager.editIgnoreItem('${text}')" title="Edit">✏️</button>
+        <button class="ignore-item-remove" onclick="configManager.removeFromIgnoreList('${text}')" title="Remove">×</button>
+      </div>
+    `;
+    
+    return itemDiv;
+  }
+
+  detectPatternType(text) {
+    // Email pattern
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return 'email';
+    
+    // Phone pattern
+    if (/^[\+]?[1-9][\d]{0,15}$/.test(text) || /^[\+]?[1-9][\d\s\-\(\)]{7,}$/.test(text)) return 'phone';
+    
+    // SSN pattern
+    if (/^\d{3}-\d{2}-\d{4}$/.test(text)) return 'ssn';
+    
+    // Credit card pattern
+    if (/^\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}$/.test(text)) return 'creditcard';
+    
+    // URL pattern
+    if (/^https?:\/\/.+/.test(text)) return 'url';
+    
+    // IP address pattern
+    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(text)) return 'ip';
+    
+    return 'other';
+  }
+
+  generateDescription(text) {
+    const type = this.detectPatternType(text);
+    const descriptions = {
+      email: 'Email address',
+      phone: 'Phone number',
+      ssn: 'Social Security Number',
+      creditcard: 'Credit card number',
+      url: 'Web URL',
+      ip: 'IP address',
+      other: 'Text pattern'
+    };
+    return descriptions[type] || 'Text pattern';
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'Today';
+    if (diffDays === 2) return 'Yesterday';
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    
+    return date.toLocaleDateString();
+  }
+
+  getFilteredIgnoreItems() {
+    const searchTerm = document.getElementById('ignoreSearchInput')?.value.toLowerCase() || '';
+    const filterType = document.getElementById('ignoreFilterSelect')?.value || 'all';
+    
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+    
+    return this.settings.ignoreList.filter(text => {
+      const metadata = this.settings.ignoreListMetadata[text] || { source: 'manual', type: 'other' };
+      
+      // Search filter
+      const matchesSearch = text.toLowerCase().includes(searchTerm) || 
+                           metadata.description.toLowerCase().includes(searchTerm);
+      
+      // Source filter
+      const matchesSource = filterType === 'all' || metadata.source === filterType;
+      
+      return matchesSearch && matchesSource;
+    });
+  }
+
+  getSortedIgnoreItems(items) {
+    const sortType = document.getElementById('ignoreSortSelect')?.value || 'added';
+    
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+    
+    return items.sort((a, b) => {
+      const metadataA = this.settings.ignoreListMetadata[a] || { addedDate: new Date().toISOString(), type: 'other' };
+      const metadataB = this.settings.ignoreListMetadata[b] || { addedDate: new Date().toISOString(), type: 'other' };
+      
+      switch (sortType) {
+        case 'alphabetical':
+          return a.localeCompare(b);
+        case 'type':
+          return metadataA.type.localeCompare(metadataB.type);
+        case 'added':
+        default:
+          return new Date(metadataB.addedDate) - new Date(metadataA.addedDate);
+      }
+    });
+  }
+
+  groupIgnoreItemsBySource(items) {
+    const groups = { manual: [], csv: [] };
+    
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+    
+    items.forEach(text => {
+      const metadata = this.settings.ignoreListMetadata[text] || { source: 'manual' };
+      groups[metadata.source].push(text);
+    });
+    
+    return groups;
+  }
+
+  filterIgnoreList() {
+    this.updateIgnoreList();
+  }
+
+  sortIgnoreList() {
+    this.updateIgnoreList();
+  }
+
+  editIgnoreItem(text) {
+    const newText = prompt('Edit ignore pattern:', text);
+    if (newText && newText !== text && newText.trim()) {
+      const trimmedNewText = newText.trim();
+      
+      if (this.settings.ignoreList.includes(trimmedNewText)) {
+        this.showStatusMessage('Pattern already exists', 'warning');
+        return;
+      }
+      
+      // Update the list
+      const index = this.settings.ignoreList.indexOf(text);
+      this.settings.ignoreList[index] = trimmedNewText;
+      
+      // Update metadata
+      if (this.settings.ignoreListMetadata[text]) {
+        this.settings.ignoreListMetadata[trimmedNewText] = {
+          ...this.settings.ignoreListMetadata[text],
+          addedDate: new Date().toISOString()
+        };
+        delete this.settings.ignoreListMetadata[text];
+      }
+      
+      this.updateIgnoreList();
+      this.autoSave();
+      this.showStatusMessage('Pattern updated', 'success');
+    }
   }
 
   goBack() {
@@ -1035,11 +1295,30 @@ class ConfigManager {
       return;
     }
 
+    // Ensure ignoreListMetadata exists
+    if (!this.settings.ignoreListMetadata) {
+      this.settings.ignoreListMetadata = {};
+    }
+
     // Add unique patterns to ignore list
     let addedCount = 0;
     uniqueValues.forEach(pattern => {
       if (!this.settings.ignoreList.includes(pattern)) {
         this.settings.ignoreList.push(pattern);
+        
+        // Add metadata for CSV imported items
+        this.settings.ignoreListMetadata[pattern] = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          source: 'csv',
+          type: this.detectPatternType(pattern),
+          addedDate: new Date().toISOString(),
+          description: this.generateDescription(pattern),
+          csvImport: {
+            fileName: 'CSV Import',
+            importDate: new Date().toISOString()
+          }
+        };
+        
         addedCount++;
       }
     });
@@ -1079,6 +1358,282 @@ class ConfigManager {
     document.body.removeChild(link);
     
     this.showStatusMessage('Ignore list exported successfully', 'success');
+  }
+
+  setupCustomPatterns() {
+    // Hardcoded strings functionality
+    const addHardcodedBtn = document.getElementById('addHardcodedBtn');
+    const hardcodedStringInput = document.getElementById('hardcodedStringInput');
+    const hardcodedPlaceholderInput = document.getElementById('hardcodedPlaceholderInput');
+    
+    addHardcodedBtn.addEventListener('click', () => {
+      this.addHardcodedString();
+    });
+    
+    hardcodedStringInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.addHardcodedString();
+      }
+    });
+    
+    hardcodedPlaceholderInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.addHardcodedString();
+      }
+    });
+
+    // Regex patterns functionality
+    const addRegexBtn = document.getElementById('addRegexBtn');
+    const regexPatternInput = document.getElementById('regexPatternInput');
+    const regexPlaceholderInput = document.getElementById('regexPlaceholderInput');
+    const regexNameInput = document.getElementById('regexNameInput');
+    const testRegexBtn = document.getElementById('testRegexBtn');
+    const regexTestInput = document.getElementById('regexTestInput');
+    
+    addRegexBtn.addEventListener('click', () => {
+      this.addRegexPattern();
+    });
+    
+    [regexPatternInput, regexPlaceholderInput, regexNameInput].forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.addRegexPattern();
+        }
+      });
+    });
+    
+    testRegexBtn.addEventListener('click', () => {
+      this.testRegexPattern();
+    });
+    
+    regexTestInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.testRegexPattern();
+      }
+    });
+  }
+
+  addHardcodedString() {
+    const stringInput = document.getElementById('hardcodedStringInput');
+    const placeholderInput = document.getElementById('hardcodedPlaceholderInput');
+    
+    const string = stringInput.value.trim();
+    const placeholder = placeholderInput.value.trim();
+    
+    if (!string) {
+      this.showStatusMessage('Please enter text to replace', 'warning');
+      return;
+    }
+    
+    if (!placeholder) {
+      this.showStatusMessage('Please enter a replacement placeholder', 'warning');
+      return;
+    }
+    
+    // Check for duplicates
+    if (this.settings.customPatterns.hardcodedStrings.some(item => item.string === string)) {
+      this.showStatusMessage('This text is already in the list', 'warning');
+      return;
+    }
+    
+    // Add to settings
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    this.settings.customPatterns.hardcodedStrings.push({
+      id,
+      string,
+      placeholder
+    });
+    
+    // Clear inputs
+    stringInput.value = '';
+    placeholderInput.value = '';
+    
+    // Update UI and save
+    this.updateCustomPatterns();
+    this.autoSave();
+    this.showStatusMessage('Text pattern added successfully', 'success');
+  }
+
+  addRegexPattern() {
+    const patternInput = document.getElementById('regexPatternInput');
+    const placeholderInput = document.getElementById('regexPlaceholderInput');
+    const nameInput = document.getElementById('regexNameInput');
+    
+    const pattern = patternInput.value.trim();
+    const placeholder = placeholderInput.value.trim();
+    const name = nameInput.value.trim();
+    
+    if (!pattern) {
+      this.showStatusMessage('Please enter a regex pattern', 'warning');
+      return;
+    }
+    
+    if (!placeholder) {
+      this.showStatusMessage('Please enter a replacement placeholder', 'warning');
+      return;
+    }
+    
+    if (!name) {
+      this.showStatusMessage('Please enter a pattern name', 'warning');
+      return;
+    }
+    
+    // Validate regex pattern
+    try {
+      new RegExp(pattern, 'g');
+    } catch (error) {
+      this.showStatusMessage('Invalid regex pattern: ' + error.message, 'error');
+      return;
+    }
+    
+    // Check for duplicates
+    if (this.settings.customPatterns.regexPatterns.some(item => item.pattern === pattern)) {
+      this.showStatusMessage('This regex pattern is already in the list', 'warning');
+      return;
+    }
+    
+    // Add to settings
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    this.settings.customPatterns.regexPatterns.push({
+      id,
+      pattern,
+      placeholder,
+      name
+    });
+    
+    // Clear inputs
+    patternInput.value = '';
+    placeholderInput.value = '';
+    nameInput.value = '';
+    
+    // Update UI and save
+    this.updateCustomPatterns();
+    this.autoSave();
+    this.showStatusMessage('Regex pattern added successfully', 'success');
+  }
+
+  testRegexPattern() {
+    const patternInput = document.getElementById('regexPatternInput');
+    const testInput = document.getElementById('regexTestInput');
+    
+    const pattern = patternInput.value.trim();
+    const testText = testInput.value.trim();
+    
+    if (!pattern) {
+      this.showStatusMessage('Please enter a regex pattern to test', 'warning');
+      return;
+    }
+    
+    if (!testText) {
+      this.showStatusMessage('Please enter text to test against', 'warning');
+      return;
+    }
+    
+    try {
+      const regex = new RegExp(pattern, 'g');
+      const matches = testText.match(regex);
+      
+      if (matches) {
+        const placeholder = document.getElementById('regexPlaceholderInput').value.trim() || '[REDACTED]';
+        const result = testText.replace(regex, placeholder);
+        this.showStatusMessage(`Pattern matches! Found ${matches.length} match(es). Result: "${result}"`, 'detected');
+      } else {
+        this.showStatusMessage('Pattern does not match the test text', 'safe');
+      }
+    } catch (error) {
+      this.showStatusMessage('Invalid regex pattern: ' + error.message, 'error');
+    }
+  }
+
+  removeHardcodedString(id) {
+    this.settings.customPatterns.hardcodedStrings = this.settings.customPatterns.hardcodedStrings.filter(item => item.id !== id);
+    this.updateCustomPatterns();
+    this.autoSave();
+    this.showStatusMessage('Text pattern removed', 'success');
+  }
+
+  removeRegexPattern(id) {
+    this.settings.customPatterns.regexPatterns = this.settings.customPatterns.regexPatterns.filter(item => item.id !== id);
+    this.updateCustomPatterns();
+    this.autoSave();
+    this.showStatusMessage('Regex pattern removed', 'success');
+  }
+
+  updateCustomPatterns() {
+    // Update hardcoded strings list
+    this.updateHardcodedStringsList();
+    
+    // Update regex patterns list
+    this.updateRegexPatternsList();
+  }
+
+  updateHardcodedStringsList() {
+    const listDiv = document.getElementById('customHardcodedList');
+    listDiv.innerHTML = '';
+    
+    if (this.settings.customPatterns.hardcodedStrings.length === 0) {
+      listDiv.innerHTML = `
+        <div class="custom-patterns-empty">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">No text patterns added</div>
+          <div class="empty-description">Add specific text or phrases to replace with placeholders</div>
+        </div>
+      `;
+      return;
+    }
+    
+    this.settings.customPatterns.hardcodedStrings.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'custom-pattern-item hardcoded-item';
+      itemDiv.innerHTML = `
+        <div class="pattern-item-content">
+          <div class="pattern-item-main">
+            <span class="pattern-string" title="${item.string}">"${item.string}"</span>
+            <span class="pattern-arrow">→</span>
+            <span class="pattern-placeholder" title="${item.placeholder}">"${item.placeholder}"</span>
+          </div>
+        </div>
+        <div class="pattern-item-actions">
+          <button class="pattern-remove" onclick="configManager.removeHardcodedString('${item.id}')" title="Remove">×</button>
+        </div>
+      `;
+      listDiv.appendChild(itemDiv);
+    });
+  }
+
+  updateRegexPatternsList() {
+    const listDiv = document.getElementById('customRegexList');
+    listDiv.innerHTML = '';
+    
+    if (this.settings.customPatterns.regexPatterns.length === 0) {
+      listDiv.innerHTML = `
+        <div class="custom-patterns-empty">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">No advanced patterns added</div>
+          <div class="empty-description">Add regex patterns to detect and replace complex content formats</div>
+        </div>
+      `;
+      return;
+    }
+    
+    this.settings.customPatterns.regexPatterns.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'custom-pattern-item regex-item';
+      itemDiv.innerHTML = `
+        <div class="pattern-item-content">
+          <div class="pattern-item-main">
+            <span class="pattern-name">${item.name}</span>
+            <span class="pattern-regex" title="${item.pattern}">${item.pattern}</span>
+            <span class="pattern-arrow">→</span>
+            <span class="pattern-placeholder" title="${item.placeholder}">"${item.placeholder}"</span>
+          </div>
+        </div>
+        <div class="pattern-item-actions">
+          <button class="pattern-remove" onclick="configManager.removeRegexPattern('${item.id}')" title="Remove">×</button>
+        </div>
+      `;
+      listDiv.appendChild(itemDiv);
+    });
   }
 }
 

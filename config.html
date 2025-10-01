@@ -140,6 +140,7 @@
 
       <section class="patterns-section">
         <h2>Detection Patterns</h2>
+        <p class="section-description">Detection patterns are rules that automatically identify and replace sensitive information in your text. Each pattern type looks for specific formats (like email addresses, phone numbers, etc.) and replaces them with safe placeholders to protect your privacy when chatting with AI.</p>
         <div class="patterns-table">
           <div class="table-header">
             <div class="col-enable">Enable</div>
@@ -358,6 +359,53 @@
           </div>
         </div>
         
+        <div class="custom-patterns-section">
+          <h3>Custom Detection Patterns</h3>
+          <p class="section-description">Add your own text patterns to detect and replace specific content. Perfect for company names, internal codes, or any sensitive information unique to your organization.</p>
+          
+          <!-- Custom Text Patterns -->
+          <div class="custom-hardcoded-section">
+            <h4>Specific Text & Phrases</h4>
+            <p class="subsection-description">Add exact text or phrases that should be replaced with placeholders. Great for company names, internal project codes, or any specific sensitive information.</p>
+            
+            <div class="custom-hardcoded-container">
+              <div class="custom-hardcoded-input-group">
+                <input type="text" id="hardcodedStringInput" placeholder="Enter exact text to replace (e.g., 'Acme Corp', 'PROJECT-ALPHA')" class="hardcoded-input">
+                <input type="text" id="hardcodedPlaceholderInput" placeholder="Replacement text (e.g., '[COMPANY_REDACTED]')" class="placeholder-input">
+                <button id="addHardcodedBtn" class="add-custom-btn">Add Text</button>
+              </div>
+              
+              <div class="custom-hardcoded-list" id="customHardcodedList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- Custom Regex Patterns -->
+          <div class="custom-regex-section">
+            <h4>Advanced Pattern Matching (Regex)</h4>
+            <p class="subsection-description">For technical users: Add custom regex patterns to detect and replace content matching specific patterns. Use this for complex formats like employee IDs, internal codes, or structured data.</p>
+            
+            <div class="custom-regex-container">
+              <div class="custom-regex-input-group">
+                <input type="text" id="regexPatternInput" placeholder="Enter regex pattern (e.g., '\\b[A-Z]{2}\\d{6}\\b' for employee IDs)" class="regex-input">
+                <input type="text" id="regexPlaceholderInput" placeholder="Replacement text (e.g., '[EMPLOYEE_ID_REDACTED]')" class="placeholder-input">
+                <input type="text" id="regexNameInput" placeholder="Pattern name (e.g., 'Employee ID')" class="name-input">
+                <button id="addRegexBtn" class="add-custom-btn">Add Pattern</button>
+              </div>
+              
+              <div class="regex-test-group">
+                <input type="text" id="regexTestInput" placeholder="Test your regex pattern here" class="test-input">
+                <button id="testRegexBtn" class="test-btn">Test</button>
+              </div>
+              
+              <div class="custom-regex-list" id="customRegexList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div class="ignore-list-section">
           <h3>Ignore List</h3>
           <p class="section-description">Add specific text patterns that should never be redacted, even if they match detection patterns.</p>
@@ -368,6 +416,36 @@
               <input type="text" id="ignoreInput" placeholder="Enter text to ignore (e.g., test@example.com)" class="ignore-input">
               <button id="addIgnoreBtn" class="add-ignore-btn">Add</button>
             </div>
+            
+            <!-- Enhanced Ignore List UI -->
+            <div class="ignore-list-header">
+              <div class="ignore-list-controls">
+                <div class="ignore-search-group">
+                  <input type="text" id="ignoreSearchInput" placeholder="Search ignore list..." class="ignore-search-input">
+                  <span class="search-icon">🔍</span>
+                </div>
+                <div class="ignore-filter-group">
+                  <select id="ignoreFilterSelect" class="ignore-filter-select">
+                    <option value="all">All Items</option>
+                    <option value="manual">Manual Entries</option>
+                    <option value="csv">CSV Imports</option>
+                  </select>
+                </div>
+                <div class="ignore-sort-group">
+                  <select id="ignoreSortSelect" class="ignore-sort-select">
+                    <option value="added">Sort by Date Added</option>
+                    <option value="alphabetical">Sort Alphabetically</option>
+                    <option value="type">Sort by Type</option>
+                  </select>
+                </div>
+              </div>
+              <div class="ignore-list-stats">
+                <span id="ignoreListCount">0 items</span>
+                <span class="separator">•</span>
+                <span id="ignoreListSource">0 manual, 0 CSV</span>
+              </div>
+            </div>
+            
             <div class="ignore-list" id="ignoreList">
               <!-- Dynamically populated -->
             </div>
@@ -444,12 +522,12 @@
                   </div>
                 </div>
                 
-                <div class="csv-actions">
-                  <button id="csvImportBtn" class="csv-import-btn" disabled>
-                    Import <span id="importCount">0</span> Selected Items
-                  </button>
-                  <button id="csvCancelBtn" class="csv-cancel-btn">Cancel</button>
-                </div>
+                  <div class="csv-actions">
+                    <button id="csvImportBtn" class="csv-import-btn" disabled>
+                      Add <span id="importCount">0</span> Selected Items to Ignore List
+                    </button>
+                    <button id="csvCancelBtn" class="csv-cancel-btn">Cancel</button>
+                  </div>
               </div>
             </div>
             

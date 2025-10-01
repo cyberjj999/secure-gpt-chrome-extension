@@ -48,7 +48,11 @@ class SecureGPT {
       patterns: Object.keys(this.patterns).reduce((acc, key) => {
         acc[key] = true;
         return acc;
-      }, {})
+      }, {}),
+      customPatterns: {
+        hardcodedStrings: [],
+        regexPatterns: []
+      }
     };
     
     this.init();
@@ -159,6 +163,33 @@ class SecureGPT {
     let sanitized = text;
     let replacementCount = 0;
 
+    // First, process custom hardcoded strings (exact matches)
+    if (this.settings.customPatterns && this.settings.customPatterns.hardcodedStrings) {
+      this.settings.customPatterns.hardcodedStrings.forEach(item => {
+        if (sanitized.includes(item.string)) {
+          sanitized = sanitized.replace(new RegExp(this.escapeRegExp(item.string), 'g'), item.placeholder);
+          replacementCount++;
+        }
+      });
+    }
+
+    // Then, process custom regex patterns
+    if (this.settings.customPatterns && this.settings.customPatterns.regexPatterns) {
+      this.settings.customPatterns.regexPatterns.forEach(item => {
+        try {
+          const regex = new RegExp(item.pattern, 'g');
+          const matches = sanitized.match(regex);
+          if (matches) {
+            sanitized = sanitized.replace(regex, item.placeholder);
+            replacementCount += matches.length;
+          }
+        } catch (error) {
+          console.warn('SecureGPT: Invalid custom regex pattern:', item.pattern, error);
+        }
+      });
+    }
+
+    // Finally, process built-in patterns
     for (const [patternName, pattern] of Object.entries(this.patterns)) {
       if (this.settings.patterns[patternName]) {
         const matches = sanitized.match(pattern.regex);
@@ -170,6 +201,10 @@ class SecureGPT {
     }
 
     return sanitized;
+  }
+
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   showNotification(message) {

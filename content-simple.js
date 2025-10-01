@@ -62,7 +62,11 @@ class SecureGPTSimple {
       patterns: Object.keys(this.patterns).reduce((acc, key) => {
         acc[key] = true;
         return acc;
-      }, {})
+      }, {}),
+      customPatterns: {
+        hardcodedStrings: [],
+        regexPatterns: []
+      }
     };
     
     this.currentPromptDiv = null;
@@ -457,7 +461,33 @@ class SecureGPTSimple {
     let sanitized = text;
     let replacementCount = 0;
 
-    // Process patterns in order of specificity (most specific first)
+    // First, process custom hardcoded strings (exact matches)
+    if (this.settings.customPatterns && this.settings.customPatterns.hardcodedStrings) {
+      this.settings.customPatterns.hardcodedStrings.forEach(item => {
+        if (sanitized.includes(item.string)) {
+          sanitized = sanitized.replace(new RegExp(this.escapeRegExp(item.string), 'g'), item.placeholder);
+          replacementCount++;
+        }
+      });
+    }
+
+    // Then, process custom regex patterns
+    if (this.settings.customPatterns && this.settings.customPatterns.regexPatterns) {
+      this.settings.customPatterns.regexPatterns.forEach(item => {
+        try {
+          const regex = new RegExp(item.pattern, 'g');
+          const matches = sanitized.match(regex);
+          if (matches) {
+            sanitized = sanitized.replace(regex, item.placeholder);
+            replacementCount += matches.length;
+          }
+        } catch (error) {
+          console.warn('SecureGPT: Invalid custom regex pattern:', item.pattern, error);
+        }
+      });
+    }
+
+    // Finally, process built-in patterns in order of specificity (most specific first)
     const patternOrder = [
       'creditCard',           // Most specific credit card patterns first
       'creditCardGeneric',    // Generic credit card patterns
@@ -488,6 +518,10 @@ class SecureGPTSimple {
     }
 
     return sanitized;
+  }
+
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   showNotification(message) {
