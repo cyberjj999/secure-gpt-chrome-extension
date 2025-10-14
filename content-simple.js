@@ -95,6 +95,9 @@ class SecureGPTSimple {
       return;
     }
 
+    // First, investigate the real DOM structure
+    this.investigateRealDOM();
+
     this.setupEventListeners();
     this.setupDebugging();
     this.createFloatingFallback();
@@ -173,6 +176,17 @@ class SecureGPTSimple {
               }
               
               if (foundElement) {
+                console.log('SecureGPT: MutationObserver found element:', foundElement);
+                console.log('SecureGPT: Element details:', {
+                  tagName: foundElement.tagName,
+                  id: foundElement.id,
+                  className: foundElement.className,
+                  placeholder: foundElement.placeholder,
+                  role: foundElement.getAttribute('role'),
+                  contenteditable: foundElement.getAttribute('contenteditable'),
+                  dataTestId: foundElement.getAttribute('data-testid'),
+                  dataCy: foundElement.getAttribute('data-cy')
+                });
                 this.attachToPromptDiv(foundElement);
               }
               
@@ -199,9 +213,23 @@ class SecureGPTSimple {
     
     // Use improved element detection with scoring
     const targetElement = this.findTargetElement();
+    console.log('SecureGPT: checkExistingElements - targetElement:', targetElement);
+
     if (targetElement) {
       console.log('SecureGPT: Found target element:', targetElement);
+      console.log('SecureGPT: Element details:', {
+        tagName: targetElement.tagName,
+        id: targetElement.id,
+        className: targetElement.className,
+        placeholder: targetElement.placeholder,
+        role: targetElement.getAttribute('role'),
+        contenteditable: targetElement.getAttribute('contenteditable'),
+        dataTestId: targetElement.getAttribute('data-testid'),
+        dataCy: targetElement.getAttribute('data-cy')
+      });
       this.attachToPromptDiv(targetElement);
+    } else {
+      console.log('SecureGPT: No target element found');
     }
     
     // Inject De-PII button
@@ -222,7 +250,16 @@ class SecureGPTSimple {
       'textarea[aria-label*="prompt" i]',
       'textarea[class*="prompt"]',
       'textarea[class*="input"]',
-      'textarea[class*="message"]'
+      'textarea[class*="message"]',
+      // Data attribute selectors
+      '[data-testid*="prompt"]',
+      '[data-testid*="input"]',
+      '[data-testid*="textarea"]',
+      '[data-testid*="message"]',
+      '[data-cy*="prompt"]',
+      '[data-cy*="input"]',
+      '[data-cy*="textarea"]',
+      '[data-cy*="message"]'
     ];
     
     const candidates = document.querySelectorAll(selectors.join(','));
@@ -253,15 +290,65 @@ class SecureGPTSimple {
     const platformAdapters = {
       chatgpt: {
         test: () => location.hostname.includes('openai.com') || location.hostname.includes('chatgpt.com'),
-        selectors: ['#prompt-textarea', 'textarea[placeholder*="message" i]']
+        selectors: [
+          '#prompt-textarea',
+          'textarea[placeholder*="message" i]',
+          '[data-testid*="prompt"]',
+          '[data-testid*="input"]',
+          '[data-testid*="textarea"]',
+          '[data-cy*="prompt"]',
+          '[data-cy*="input"]'
+        ]
       },
       claude: {
         test: () => location.hostname.includes('claude.ai'),
-        selectors: ['div[contenteditable="true"]', 'div[role="textbox"]']
+        selectors: [
+          'div[contenteditable="true"]',
+          'div[role="textbox"]',
+          '[data-testid*="input"]',
+          '[data-testid*="prompt"]',
+          '[data-testid*="message"]',
+          '[data-cy*="input"]',
+          '[data-cy*="prompt"]',
+          '[data-cy*="message"]'
+        ]
       },
       gemini: {
         test: () => location.hostname.includes('gemini.google.com'),
-        selectors: ['textarea', 'div[contenteditable="true"]']
+        selectors: [
+          'textarea',
+          'div[contenteditable="true"]',
+          'div[role="textbox"]',
+          '[data-testid*="input"]',
+          '[data-testid*="prompt"]',
+          '[data-testid*="textarea"]',
+          '[data-cy*="input"]',
+          '[data-cy*="prompt"]'
+        ]
+      },
+      deepseek: {
+        test: () => location.hostname.includes('deepseek.com'),
+        selectors: [
+          'textarea',
+          'div[contenteditable="true"]',
+          '[data-testid*="input"]',
+          '[data-testid*="prompt"]',
+          '[data-testid*="textarea"]',
+          '[data-cy*="input"]',
+          '[data-cy*="prompt"]'
+        ]
+      },
+      perplexity: {
+        test: () => location.hostname.includes('perplexity.ai'),
+        selectors: [
+          'textarea',
+          'div[contenteditable="true"]',
+          '[data-testid*="input"]',
+          '[data-testid*="prompt"]',
+          '[data-testid*="textarea"]',
+          '[data-cy*="input"]',
+          '[data-cy*="prompt"]'
+        ]
       }
     };
     
@@ -1656,7 +1743,11 @@ class SecureGPTSimple {
         console.log('SecureGPT: Found input elements:', targets);
         return targets;
       },
-      
+
+      investigateDOM: () => {
+        return this.investigateRealDOM();
+      },
+
       testInjection: () => {
         const target = this.findTargetElement();
         if (target) {
@@ -1670,21 +1761,174 @@ class SecureGPTSimple {
           console.log('SecureGPT: No target element found');
         }
       },
-      
+
       checkObservers: () => {
         console.log('SecureGPT: Active observers:', this.observers);
       },
-      
+
       runTests: () => {
         this.runInjectionTests();
       }
     };
-    
+
     console.log('SecureGPT Debug Tools Available:');
     console.log('- secureGPTDebug.findTargets()');
+    console.log('- secureGPTDebug.investigateDOM()');
     console.log('- secureGPTDebug.testInjection()');
     console.log('- secureGPTDebug.checkObservers()');
     console.log('- secureGPTDebug.runTests()');
+  }
+
+  investigateRealDOM() {
+    console.log('🔍 Investigating real DOM structure for', window.location.hostname);
+
+    const investigation = {
+      url: window.location.href,
+      hostname: window.location.hostname,
+      timestamp: new Date().toISOString(),
+      findings: {}
+    };
+
+    // 1. Find all potential input elements
+    const inputSelectors = [
+      'textarea',
+      'input[type="text"]',
+      'input:not([type])',
+      '[contenteditable="true"]',
+      '[contenteditable=""]',
+      '[role="textbox"]',
+      'div[contenteditable]',
+      'div[role="textbox"]'
+    ];
+
+    const inputElements = [];
+    inputSelectors.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 100 && rect.height > 20) { // Only visible elements
+          inputElements.push({
+            selector: selector,
+            element: el,
+            tagName: el.tagName,
+            id: el.id,
+            className: el.className,
+            placeholder: el.placeholder,
+            role: el.getAttribute('role'),
+            contenteditable: el.getAttribute('contenteditable'),
+            ariaLabel: el.getAttribute('aria-label'),
+            rect: {
+              width: rect.width,
+              height: rect.height,
+              top: rect.top,
+              left: rect.left
+            },
+            visible: rect.width > 0 && rect.height > 0,
+            parentElement: el.parentElement ? {
+              tagName: el.parentElement.tagName,
+              className: el.parentElement.className,
+              id: el.parentElement.id
+            } : null,
+            textContent: el.textContent ? el.textContent.substring(0, 100) : null
+          });
+        }
+      });
+    });
+
+    investigation.findings.inputElements = inputElements;
+    console.log(`Found ${inputElements.length} potential input elements:`, inputElements);
+
+    // 2. Find all buttons
+    const buttons = Array.from(document.querySelectorAll('button')).map(btn => ({
+      text: btn.textContent ? btn.textContent.trim() : '',
+      ariaLabel: btn.getAttribute('aria-label'),
+      className: btn.className,
+      id: btn.id,
+      type: btn.type,
+      disabled: btn.disabled,
+      visible: btn.offsetParent !== null,
+      rect: btn.getBoundingClientRect(),
+      dataTestId: btn.getAttribute('data-testid')
+    }));
+
+    investigation.findings.buttons = buttons;
+    console.log(`Found ${buttons.length} buttons:`, buttons);
+
+    // 3. Find forms
+    const forms = Array.from(document.querySelectorAll('form')).map(form => ({
+      className: form.className,
+      id: form.id,
+      action: form.action,
+      method: form.method,
+      childCount: form.children.length
+    }));
+
+    investigation.findings.forms = forms;
+    console.log(`Found ${forms.length} forms:`, forms);
+
+    // 4. Look for specific AI platform patterns
+    const patterns = {
+      textareaWithPlaceholder: document.querySelectorAll('textarea[placeholder]'),
+      buttonWithAriaLabel: document.querySelectorAll('button[aria-label]'),
+      buttonWithDataTestId: document.querySelectorAll('button[data-testid]'),
+      divWithRoleTextbox: document.querySelectorAll('div[role="textbox"]'),
+      contentEditableWithPlaceholder: document.querySelectorAll('[contenteditable][placeholder]')
+    };
+
+    investigation.findings.patterns = {
+      textareaWithPlaceholder: Array.from(patterns.textareaWithPlaceholder).map(el => ({
+        tag: el.tagName,
+        placeholder: el.placeholder,
+        id: el.id,
+        className: el.className
+      })),
+      buttonWithAriaLabel: Array.from(patterns.buttonWithAriaLabel).map(el => ({
+        text: el.textContent?.trim(),
+        ariaLabel: el.getAttribute('aria-label'),
+        id: el.id,
+        className: el.className
+      })),
+      buttonWithDataTestId: Array.from(patterns.buttonWithDataTestId).map(el => ({
+        text: el.textContent?.trim(),
+        dataTestId: el.getAttribute('data-testid'),
+        id: el.id,
+        className: el.className
+      })),
+      divWithRoleTextbox: Array.from(patterns.divWithRoleTextbox).map(el => ({
+        textContent: el.textContent?.substring(0, 50),
+        role: el.getAttribute('role'),
+        id: el.id,
+        className: el.className
+      })),
+      contentEditableWithPlaceholder: Array.from(patterns.contentEditableWithPlaceholder).map(el => ({
+        placeholder: el.getAttribute('placeholder'),
+        id: el.id,
+        className: el.className
+      }))
+    };
+
+    console.log('Patterns found:', investigation.findings.patterns);
+
+    // 5. Summary
+    const summary = {
+      totalInputElements: inputElements.length,
+      totalButtons: buttons.length,
+      totalForms: forms.length,
+      hasContentEditable: inputElements.some(el => el.contenteditable === 'true'),
+      hasTextareas: inputElements.some(el => el.tagName === 'TEXTAREA'),
+      hasRoleTextbox: inputElements.some(el => el.role === 'textbox'),
+      platform: window.location.hostname,
+      viableInputElements: inputElements.filter(el => el.visible && el.rect.width > 200),
+      viableButtons: buttons.filter(btn => btn.visible && btn.text && btn.text.length > 0)
+    };
+
+    investigation.summary = summary;
+    console.log('📊 Investigation Summary:', summary);
+
+    // Save to window for access
+    window.secureGPTInvestigation = investigation;
+
+    return investigation;
   }
 
   createFloatingFallback() {
