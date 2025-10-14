@@ -1,0 +1,44 @@
+Integrated SecureGPT Button Test
+
+This file contains sensitive information to test the integrated SecureGPT button functionality:
+
+Personal Information:
+- Email: integrated.test@company.com
+- Phone: (555) 777-6666
+- SSN: 777-66-5555
+
+Financial Information:
+- Credit Card: 7777-6666-5555-4444
+- Bank Account: 3333444455556666
+- API Key: sk-live-integrated1234567890abcdef1234567890
+
+Technical Information:
+- IP Address: 192.168.0.100
+- Server: 10.0.0.200
+- Database: 172.16.0.100
+
+Address Information:
+- Home: 777 Test Avenue, Test City, TC 77777
+- Office: 666 Business Street, Suite 400, Test Town, TC 66666
+
+Testing Instructions:
+
+Method 1 - Text De-PII (Left-click):
+1. Type some sensitive text in the input field
+2. Left-click the SecureGPT button (🛡️ icon)
+3. Sensitive data should be replaced with placeholders
+
+Method 2 - File Upload (Right-click or Ctrl+click):
+1. Right-click the SecureGPT button (🛡️ icon)
+2. OR Ctrl+click (Cmd+click on Mac) the button
+3. Select this file from the file picker
+4. File should be automatically processed and sanitized
+5. Sanitized content should be inserted into the input field
+
+Method 3 - Dual Zone (Toggle Button):
+1. Click the "🔄 Dual Zone" button to activate
+2. Drag this file over the input field
+3. Drop on the "Secure Drop" zone
+4. File should be sanitized and content inserted
+
+All methods should result in sensitive data being replaced with placeholders like [EMAIL_REDACTED], [PHONE_REDACTED], etc.

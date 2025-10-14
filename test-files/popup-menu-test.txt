@@ -1,0 +1,55 @@
+Popup Menu Test File
+
+This file contains sensitive information to test the new SecureGPT popup menu functionality:
+
+Personal Information:
+- Email: popup.test@company.com
+- Phone: (555) 111-2222
+- SSN: 111-22-3333
+
+Financial Information:
+- Credit Card: 1111-2222-3333-4444
+- Bank Account: 5555666677778888
+- API Key: sk-live-popup1234567890abcdef1234567890
+
+Technical Information:
+- IP Address: 192.168.1.111
+- Server: 10.0.0.222
+- Database: 172.16.0.333
+
+Address Information:
+- Home: 111 Popup Street, Test City, TC 11111
+- Office: 222 Menu Avenue, Suite 500, Test Town, TC 22222
+
+Testing Instructions:
+
+1. Click the SecureGPT button (🛡️ icon) to open the modal dialog
+2. You should see a centered modal with a header and 4 action cards:
+
+   Header: SecureGPT logo + title + close button (×)
+   
+   Action Cards:
+   ⏸️ Disable Extension (or ▶️ Enable Extension)
+   Turn off/on SecureGPT
+   
+   🛡️ De-PII Text
+   Remove sensitive data from text
+   
+   📁 Upload Files
+   Upload and sanitize files
+   
+   ⚙️ Settings
+   Configure SecureGPT options
+
+3. Test each action:
+   - Disable/Enable Extension: Turn the extension on/off (first card)
+   - De-PII Text: Type sensitive text and click this card
+   - Upload Files: Click this card and select this test file
+   - Settings: Open the extension settings
+
+4. Test modal interactions:
+   - Click outside the modal to close
+   - Press Escape key to close
+   - Click the × button to close
+
+The modal should be centered on screen with a dark overlay background.

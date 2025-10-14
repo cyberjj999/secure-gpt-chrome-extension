@@ -224,6 +224,12 @@ class SecureGPTSimple {
     promptDiv.secureGptDragState = false; // Track drag state
     this.currentPromptDiv = promptDiv;
 
+    // Create dual-zone drop overlay
+    this.createDualZoneOverlay(promptDiv);
+    
+    // Create dual-zone toggle button
+    this.createDualZoneToggle(promptDiv);
+
     // Listen for input events on contenteditable div
     promptDiv.addEventListener('input', (event) => {
       if (!this.settings.enabled || !this.settings.autoScan) return;
@@ -250,103 +256,550 @@ class SecureGPTSimple {
       }
     });
 
-    // Global drag end event to reset drag state
-    document.addEventListener('dragend', () => {
-      if (promptDiv.secureGptDragState) {
-        promptDiv.secureGptDragState = false;
-        promptDiv.style.border = '';
-        promptDiv.style.backgroundColor = '';
-        
-        const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
-        if (indicator) {
-          indicator.remove();
-        }
-      }
-    });
+    // Note: Drag and drop events are now handled by the dual-zone overlay
+  }
 
-    // Listen for file drop events
-    promptDiv.addEventListener('dragover', (event) => {
-      if (!this.settings.enabled) return;
+  createDualZoneOverlay(promptDiv) {
+    if (!this.settings.enabled) return;
+    
+    // Create the main overlay container
+    const overlay = document.createElement('div');
+    overlay.className = 'securegpt-dual-zone-overlay';
+    overlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    `;
+    
+    // Left zone - Original behavior (pass-through)
+    const leftZone = document.createElement('div');
+    leftZone.className = 'securegpt-left-zone';
+    leftZone.style.cssText = `
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      pointer-events: auto;
+      background: rgba(0, 0, 0, 0.05);
+      border-right: 2px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #666;
+      transition: all 0.2s ease;
+    `;
+    leftZone.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
+        <div style="font-weight: 500;">Original Drop</div>
+        <div style="font-size: 12px; opacity: 0.8;">Direct to AI</div>
+      </div>
+    `;
+    
+    // Right zone - Secure processing
+    const rightZone = document.createElement('div');
+    rightZone.className = 'securegpt-right-zone';
+    rightZone.style.cssText = `
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      pointer-events: auto;
+      background: rgba(102, 126, 234, 0.1);
+      border-left: 2px solid rgba(102, 126, 234, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #667eea;
+      transition: all 0.2s ease;
+    `;
+    rightZone.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 8px;">🛡️</div>
+        <div style="font-weight: 500;">Secure Drop</div>
+        <div style="font-size: 12px; opacity: 0.8;">Auto-sanitized</div>
+      </div>
+    `;
+    
+    // Add zones to overlay
+    overlay.appendChild(leftZone);
+    overlay.appendChild(rightZone);
+    
+    // Add overlay to prompt div
+    promptDiv.style.position = 'relative';
+    promptDiv.appendChild(overlay);
+    
+    // Set up drag and drop events for both zones
+    this.setupZoneEvents(leftZone, rightZone, overlay, promptDiv);
+  }
+
+  setupZoneEvents(leftZone, rightZone, overlay, promptDiv) {
+    // Left zone - Pass through to original behavior
+    leftZone.addEventListener('dragover', (event) => {
       event.preventDefault();
       event.dataTransfer.dropEffect = 'copy';
+      leftZone.style.background = 'rgba(0, 0, 0, 0.1)';
     });
 
-    promptDiv.addEventListener('dragenter', (event) => {
-      if (!this.settings.enabled) return;
+    leftZone.addEventListener('dragenter', (event) => {
       event.preventDefault();
-      
-      // Only add indicator if not already in drag state
-      if (!promptDiv.secureGptDragState) {
-        promptDiv.secureGptDragState = true;
-        promptDiv.style.border = '2px dashed #667eea';
-        promptDiv.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
-        promptDiv.style.transition = 'all 0.2s ease';
-        
-        // Add visual indicator
-        const indicator = document.createElement('div');
-        indicator.className = 'securegpt-drop-indicator';
-        indicator.style.cssText = `
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: rgba(102, 126, 234, 0.9);
-          color: white;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 14px;
-          font-weight: 500;
-          z-index: 1000;
-          pointer-events: none;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        `;
-        indicator.textContent = 'Drop files to scan for sensitive data';
-        promptDiv.style.position = 'relative';
-        promptDiv.appendChild(indicator);
+      leftZone.style.background = 'rgba(0, 0, 0, 0.15)';
+    });
+
+    leftZone.addEventListener('dragleave', (event) => {
+      if (!leftZone.contains(event.relatedTarget)) {
+        leftZone.style.background = 'rgba(0, 0, 0, 0.05)';
       }
     });
 
-    promptDiv.addEventListener('dragleave', (event) => {
-      if (!this.settings.enabled) return;
+    leftZone.addEventListener('drop', (event) => {
       event.preventDefault();
+      leftZone.style.background = 'rgba(0, 0, 0, 0.05)';
       
-      // Only remove indicator if we're actually leaving the element
-      // Check if the related target is outside the promptDiv
-      if (!promptDiv.contains(event.relatedTarget)) {
-        promptDiv.secureGptDragState = false;
-        promptDiv.style.border = '';
-        promptDiv.style.backgroundColor = '';
-        
-        // Remove visual indicator
-        const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
-        if (indicator) {
-          indicator.remove();
-        }
+      // Hide overlay and let original behavior handle the drop
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 200);
+      
+      // Re-dispatch the drop event to the original prompt div
+      const newEvent = new DragEvent('drop', {
+        dataTransfer: event.dataTransfer,
+        bubbles: true,
+        cancelable: true
+      });
+      promptDiv.dispatchEvent(newEvent);
+    });
+
+    // Right zone - Secure processing
+    rightZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+      rightZone.style.background = 'rgba(102, 126, 234, 0.15)';
+    });
+
+    rightZone.addEventListener('dragenter', (event) => {
+      event.preventDefault();
+      rightZone.style.background = 'rgba(102, 126, 234, 0.2)';
+    });
+
+    rightZone.addEventListener('dragleave', (event) => {
+      if (!rightZone.contains(event.relatedTarget)) {
+        rightZone.style.background = 'rgba(102, 126, 234, 0.1)';
       }
     });
 
-    promptDiv.addEventListener('drop', (event) => {
-      if (!this.settings.enabled) return;
+    rightZone.addEventListener('drop', async (event) => {
       event.preventDefault();
+      event.stopPropagation();
+      rightZone.style.background = 'rgba(102, 126, 234, 0.1)';
       
-      // Reset drag state
-      promptDiv.secureGptDragState = false;
-      promptDiv.style.border = '';
-      promptDiv.style.backgroundColor = '';
-      
-      // Remove visual indicator
-      const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
-      if (indicator) {
-        indicator.remove();
-      }
+      // Hide overlay
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 200);
       
       const files = Array.from(event.dataTransfer.files);
       if (files.length > 0) {
-        // Show immediate alert for file drop
+        // Show immediate alert for secure drop
         this.showFileDropAlert(files);
-        this.handleFileDrop(files, promptDiv);
+        
+        // Process files and create sanitized versions
+        const sanitizedFiles = await this.createSanitizedFiles(files);
+        
+        // Insert sanitized content into the prompt div
+        await this.insertSanitizedContent(promptDiv, sanitizedFiles);
+        
+        // Handle the sanitized files
+        this.handleFileDrop(sanitizedFiles, promptDiv);
       }
     });
+
+    // Show overlay when dragging over the prompt div
+    promptDiv.addEventListener('dragenter', (event) => {
+      if (!this.settings.enabled) return;
+      event.preventDefault();
+      overlay.style.display = 'block';
+      overlay.style.opacity = '1';
+    });
+
+    // Hide overlay when dragging leaves
+    promptDiv.addEventListener('dragleave', (event) => {
+      if (!promptDiv.contains(event.relatedTarget)) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 200);
+        leftZone.style.background = 'rgba(0, 0, 0, 0.05)';
+        rightZone.style.background = 'rgba(102, 126, 234, 0.1)';
+      }
+    });
+
+    // Hide overlay on drag end
+    document.addEventListener('dragend', () => {
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 200);
+      leftZone.style.background = 'rgba(0, 0, 0, 0.05)';
+      rightZone.style.background = 'rgba(102, 126, 234, 0.1)';
+    });
+  }
+
+  toggleSecureGPTPopup() {
+    // Remove existing modal if it exists
+    const existingModal = document.querySelector('.securegpt-modal');
+    if (existingModal) {
+      existingModal.remove();
+      return;
+    }
+
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'securegpt-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    `;
+
+    // Create header
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e5e9;
+    `;
+
+    header.innerHTML = `
+      <div style="display: flex; align-items: center;">
+        <img src="${chrome.runtime.getURL('icons/icon16.png')}" width="24" height="24" style="margin-right: 12px;">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">SecureGPT</h2>
+      </div>
+      <button class="close-btn" style="
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+      ">×</button>
+    `;
+
+    // Create menu items
+    const menuItems = [
+      {
+        icon: this.settings.enabled ? '⏸️' : '▶️',
+        text: this.settings.enabled ? 'Disable Extension' : 'Enable Extension',
+        action: () => this.toggleExtension(),
+        description: this.settings.enabled ? 'Turn off SecureGPT' : 'Turn on SecureGPT'
+      },
+      {
+        icon: '🛡️',
+        text: 'De-PII Text',
+        action: () => this.manualDePii(),
+        description: 'Remove sensitive data from text'
+      },
+      {
+        icon: '📁',
+        text: 'Upload Files',
+        action: () => this.openFilePicker(),
+        description: 'Upload and sanitize files'
+      },
+      {
+        icon: '⚙️',
+        text: 'Settings',
+        action: () => this.openSettings(),
+        description: 'Configure SecureGPT options'
+      }
+    ];
+
+    // Add menu items
+    menuItems.forEach((item, index) => {
+      const menuItem = document.createElement('div');
+      menuItem.className = 'securegpt-menu-item';
+      menuItem.style.cssText = `
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #f0f0f0;
+      `;
+
+      menuItem.innerHTML = `
+        <span style="font-size: 24px; margin-right: 16px; width: 32px; text-align: center;">${item.icon}</span>
+        <div style="flex: 1;">
+          <div style="font-weight: 500; font-size: 16px; color: #333; margin-bottom: 4px;">${item.text}</div>
+          <div style="font-size: 14px; color: #666; line-height: 1.4;">${item.description}</div>
+        </div>
+      `;
+
+      // Hover effect
+      menuItem.addEventListener('mouseenter', () => {
+        menuItem.style.backgroundColor = '#f8f9fa';
+        menuItem.style.borderColor = '#e1e5e9';
+      });
+
+      menuItem.addEventListener('mouseleave', () => {
+        menuItem.style.backgroundColor = 'transparent';
+        menuItem.style.borderColor = '#f0f0f0';
+      });
+
+      // Click handler
+      menuItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        item.action();
+        modal.remove();
+      });
+
+      modalContent.appendChild(menuItem);
+    });
+
+    // Add header and content to modal
+    modalContent.appendChild(header);
+    modal.appendChild(modalContent);
+
+    // Add to document
+    document.body.appendChild(modal);
+
+    // Close modal handlers
+    const closeModal = () => {
+      modal.remove();
+    };
+
+    // Close button
+    const closeBtn = modalContent.querySelector('.close-btn');
+    closeBtn.addEventListener('click', closeModal);
+
+    // Click outside to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Escape key to close
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+  }
+
+  openFilePicker() {
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  // Dual zone toggle removed as requested
+
+  toggleExtension() {
+    this.settings.enabled = !this.settings.enabled;
+    chrome.storage.sync.set({ settings: this.settings });
+    
+    if (this.settings.enabled) {
+      this.showNotification('SecureGPT enabled');
+    } else {
+      this.showNotification('SecureGPT disabled');
+    }
+  }
+
+  openSettings() {
+    // Open the extension's settings page
+    chrome.runtime.sendMessage({ action: 'openSettings' });
+  }
+
+  async handleSecureFileUpload(files) {
+    if (!this.settings.enabled) return;
+    
+    // Show processing indicator
+    const processingIndicator = this.showProcessingIndicator(document.body, files.length);
+    
+    try {
+      // Process files and create sanitized versions
+      const sanitizedFiles = await this.createSanitizedFiles(files);
+      
+      // Insert sanitized content into the current prompt div
+      if (this.currentPromptDiv) {
+        await this.insertSanitizedContent(this.currentPromptDiv, sanitizedFiles);
+      }
+      
+      // Handle the sanitized files
+      this.handleFileDrop(sanitizedFiles, this.currentPromptDiv);
+      
+    } catch (error) {
+      console.error('SecureGPT: Error handling secure file upload:', error);
+      this.showNotification(`Error processing files: ${error.message}`);
+    } finally {
+      // Remove processing indicator
+      if (processingIndicator && processingIndicator.parentNode) {
+        processingIndicator.parentNode.removeChild(processingIndicator);
+      }
+    }
+  }
+
+  createDualZoneToggle(promptDiv) {
+    if (!this.settings.enabled) return;
+    
+    // Create the toggle button
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'securegpt-dual-zone-toggle';
+    toggleBtn.innerHTML = '🔄 Dual Zone';
+    toggleBtn.style.cssText = `
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 16px;
+      margin: 4px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+      position: relative;
+      z-index: 1001;
+    `;
+    
+    // Hover effects
+    toggleBtn.addEventListener('mouseenter', () => {
+      toggleBtn.style.background = 'linear-gradient(135deg, #218838 0%, #1ea085 100%)';
+      toggleBtn.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.3)';
+    });
+    
+    toggleBtn.addEventListener('mouseleave', () => {
+      toggleBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+      toggleBtn.style.boxShadow = '0 2px 4px rgba(40, 167, 69, 0.2)';
+    });
+    
+    // Toggle state
+    let isDualZoneActive = false;
+    
+    // Click handler
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      isDualZoneActive = !isDualZoneActive;
+      
+      if (isDualZoneActive) {
+        // Show dual-zone overlay
+        const overlay = promptDiv.querySelector('.securegpt-dual-zone-overlay');
+        if (overlay) {
+          overlay.style.display = 'block';
+          overlay.style.opacity = '1';
+        }
+        toggleBtn.innerHTML = '❌ Hide Zones';
+        toggleBtn.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+        this.showNotification('Dual-zone mode activated! Drag files to see zones.');
+      } else {
+        // Hide dual-zone overlay
+        const overlay = promptDiv.querySelector('.securegpt-dual-zone-overlay');
+        if (overlay) {
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            overlay.style.display = 'none';
+          }, 200);
+        }
+        toggleBtn.innerHTML = '🔄 Dual Zone';
+        toggleBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+        this.showNotification('Dual-zone mode deactivated.');
+      }
+    });
+    
+    // Position the button near the input field
+    this.positionDualZoneToggle(toggleBtn, promptDiv);
+    
+    // Store reference for cleanup
+    promptDiv._dualZoneToggle = toggleBtn;
+  }
+
+  positionDualZoneToggle(button, promptDiv) {
+    const updatePosition = () => {
+      const rect = promptDiv.getBoundingClientRect();
+      button.style.position = 'fixed';
+      button.style.left = `${rect.right - 120}px`;
+      button.style.top = `${rect.top - 40}px`;
+    };
+    
+    updatePosition();
+    
+    // Update position on scroll/resize
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+  }
+
+  async insertSanitizedContent(promptDiv, sanitizedFiles) {
+    // Insert sanitized file content into the prompt div
+    for (const file of sanitizedFiles) {
+      if (file._secureGptSanitized) {
+        try {
+          const content = await this.readFileContent(file);
+          
+          // Insert content into the prompt div
+          const textNode = document.createTextNode(`\n\n--- File: ${file.name} ---\n${content}\n--- End File ---\n\n`);
+          promptDiv.appendChild(textNode);
+          
+          // Trigger input event to notify the application
+          const event = new Event('input', { bubbles: true });
+          promptDiv.dispatchEvent(event);
+          
+        } catch (error) {
+          console.error('SecureGPT: Error inserting sanitized content:', error);
+        }
+      }
+    }
   }
 
   scanPromptDiv(promptDiv) {
@@ -464,10 +917,10 @@ class SecureGPTSimple {
       if (sendButton) break;
     }
 
-    // Create De-PII button
+    // Create De-PII button with file upload functionality
     this.dePiiButton = document.createElement('button');
     this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
-    this.dePiiButton.title = 'De-PII: Remove sensitive information';
+    this.dePiiButton.title = 'SecureGPT: Click to open menu with De-PII, file upload, and settings';
     this.dePiiButton.style.cssText = `
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
@@ -480,6 +933,7 @@ class SecureGPTSimple {
       transition: all 0.2s;
       box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
       font-weight: 500;
+      position: relative;
     `;
     
     // Hover effect
@@ -492,11 +946,26 @@ class SecureGPTSimple {
       this.dePiiButton.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.2)';
     });
     
-    // Click handler
+    // Create hidden file input for secure upload
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.accept = '.txt,.md,.csv,.json,.log,.pdf,.doc,.docx,.rtf,.js,.py,.html,.xml,.yaml';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', async (event) => {
+      const files = Array.from(event.target.files);
+      if (files.length > 0) {
+        await this.handleSecureFileUpload(files);
+      }
+    });
+
+    // Click handler to show popup menu
     this.dePiiButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.manualDePii();
+      
+      // Toggle popup menu
+      this.toggleSecureGPTPopup();
     });
 
     if (sendButton && sendButton.parentNode) {
@@ -560,6 +1029,80 @@ class SecureGPTSimple {
     }
   }
 
+  async createSanitizedFiles(originalFiles) {
+    const sanitizedFiles = [];
+    
+    for (const file of originalFiles) {
+      try {
+        // Check if file format is supported
+        if (!this.isSupportedFileFormat(file)) {
+          console.log(`SecureGPT: Skipping unsupported file format: ${file.name}`);
+          sanitizedFiles.push(file); // Keep original if unsupported
+          continue;
+        }
+        
+        // Check file size (limit to 10MB for security)
+        if (file.size > 10 * 1024 * 1024) {
+          console.log(`SecureGPT: File too large: ${file.name}`);
+          sanitizedFiles.push(file); // Keep original if too large
+          continue;
+        }
+        
+        // Read and sanitize file content
+        const originalContent = await this.readFileContent(file);
+        const sanitizedContent = this.sanitizeText(originalContent);
+        
+        // Only create new file if content was actually sanitized
+        if (originalContent !== sanitizedContent) {
+          // Create sanitized file
+          const sanitizedBlob = new Blob([sanitizedContent], { type: file.type });
+          const sanitizedFile = new File([sanitizedBlob], file.name, { 
+            type: file.type,
+            lastModified: file.lastModified 
+          });
+          
+          // Add metadata to track that this file was sanitized
+          sanitizedFile._secureGptSanitized = true;
+          sanitizedFile._originalSize = file.size;
+          sanitizedFile._sanitizedSize = sanitizedBlob.size;
+          
+          sanitizedFiles.push(sanitizedFile);
+          console.log(`SecureGPT: Created sanitized version of ${file.name}`);
+        } else {
+          // No sensitive data found, keep original
+          sanitizedFiles.push(file);
+        }
+        
+      } catch (error) {
+        console.error('SecureGPT: Error creating sanitized file:', file.name, error);
+        sanitizedFiles.push(file); // Keep original on error
+      }
+    }
+    
+    return sanitizedFiles;
+  }
+
+  replaceFilesInDropEvent(event, sanitizedFiles) {
+    // Create a new DataTransfer object with sanitized files
+    const newDataTransfer = new DataTransfer();
+    
+    sanitizedFiles.forEach(file => {
+      newDataTransfer.items.add(file);
+    });
+    
+    // Replace the dataTransfer in the event
+    Object.defineProperty(event, 'dataTransfer', {
+      value: newDataTransfer,
+      writable: false
+    });
+    
+    // Also update the files property
+    Object.defineProperty(event.dataTransfer, 'files', {
+      value: sanitizedFiles,
+      writable: false
+    });
+  }
+
   async handleFileDrop(files, promptDiv) {
     if (!this.settings.enabled) return;
     
@@ -568,6 +1111,7 @@ class SecureGPTSimple {
     
     let totalSensitiveDataFound = 0;
     let processedFiles = 0;
+    let sanitizedFiles = 0;
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -575,26 +1119,32 @@ class SecureGPTSimple {
         // Update progress
         this.updateProcessingIndicator(processingIndicator, i + 1, files.length, file.name);
         
-        // Check file size (limit to 10MB for security)
-        if (file.size > 10 * 1024 * 1024) {
-          this.showNotification(`File ${file.name} is too large (>10MB). Skipping.`);
-          continue;
-        }
-        
-        // Check if file format is supported
-        if (!this.isSupportedFileFormat(file)) {
-          this.showNotification(`File ${file.name} is not a supported format. Supported: PDF, TXT, DOC, DOCX, MD, CSV, JSON, LOG. Skipping.`);
-          continue;
-        }
-        
-        const fileContent = await this.readFileContent(file);
-        const sensitiveDataFound = this.scanFileContent(fileContent, file.name);
-        
-        if (sensitiveDataFound > 0) {
-          totalSensitiveDataFound += sensitiveDataFound;
-          this.showNotification(`Found ${sensitiveDataFound} sensitive data pattern(s) in ${file.name}`);
+        // Check if this file was sanitized
+        if (file._secureGptSanitized) {
+          sanitizedFiles++;
+          this.showNotification(`File ${file.name} has been sanitized and is ready to upload`);
         } else {
-          this.showNotification(`No sensitive data found in ${file.name}`);
+          // Check if file format is supported
+          if (!this.isSupportedFileFormat(file)) {
+            this.showNotification(`File ${file.name} is not a supported format. Supported: PDF, TXT, DOC, DOCX, MD, CSV, JSON, LOG. Skipping.`);
+            continue;
+          }
+          
+          // Check file size (limit to 10MB for security)
+          if (file.size > 10 * 1024 * 1024) {
+            this.showNotification(`File ${file.name} is too large (>10MB). Skipping.`);
+            continue;
+          }
+          
+          const fileContent = await this.readFileContent(file);
+          const sensitiveDataFound = this.scanFileContent(fileContent, file.name);
+          
+          if (sensitiveDataFound > 0) {
+            totalSensitiveDataFound += sensitiveDataFound;
+            this.showNotification(`Found ${sensitiveDataFound} sensitive data pattern(s) in ${file.name}`);
+          } else {
+            this.showNotification(`No sensitive data found in ${file.name}`);
+          }
         }
         
         processedFiles++;
@@ -611,7 +1161,13 @@ class SecureGPTSimple {
     }
     
     if (processedFiles > 0) {
-      if (totalSensitiveDataFound > 0) {
+      if (sanitizedFiles > 0) {
+        this.showEnhancedNotification(
+          `🛡️ Files Sanitized Successfully!`, 
+          `${sanitizedFiles} file(s) have been sanitized and are ready to upload. Sensitive data has been replaced with placeholders.`,
+          'success'
+        );
+      } else if (totalSensitiveDataFound > 0) {
         this.showEnhancedNotification(
           `⚠️ Sensitive Data Found!`, 
           `Found ${totalSensitiveDataFound} sensitive data pattern(s) across ${processedFiles} file(s). Review before sending.`,

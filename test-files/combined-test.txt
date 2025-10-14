@@ -1,0 +1,38 @@
+Combined Test File for Dual Approach
+
+This file contains sensitive information to test both the dual-zone overlay and secure upload button:
+
+Personal Information:
+- Email: combined.test@company.com
+- Phone: (555) 999-8888
+- SSN: 999-88-7777
+
+Financial Information:
+- Credit Card: 5555-4444-3333-2222
+- Bank Account: 1111222233334444
+- API Key: sk-live-combined1234567890abcdef1234567890
+
+Technical Information:
+- IP Address: 10.0.0.100
+- Server: 192.168.1.200
+- Database: 172.16.0.50
+
+Address Information:
+- Home: 999 Test Street, Test City, TC 99999
+- Office: 888 Business Blvd, Suite 300, Test Town, TC 88888
+
+Testing Instructions:
+
+Method 1 - Dual Zone Overlay:
+1. Click the "🔄 Dual Zone" button to activate dual-zone mode
+2. Drag this file over the input field
+3. You should see two zones: "Original Drop" and "Secure Drop"
+4. Drop on the "Secure Drop" zone to test sanitization
+
+Method 2 - Secure Upload Button:
+1. Click the "🛡️ Secure Upload" button
+2. Select this file from the file picker
+3. File should be automatically processed and sanitized
+4. Sanitized content should be inserted into the input field
+
+Both methods should result in sensitive data being replaced with placeholders like [EMAIL_REDACTED], [PHONE_REDACTED], etc.

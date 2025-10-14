@@ -1,0 +1,36 @@
+Dual Zone Drop Test File
+
+This file contains sensitive information to test the dual-zone drop functionality:
+
+Personal Information:
+- Email: test.user@company.com
+- Phone: (555) 123-4567
+- SSN: 123-45-6789
+
+Financial Information:
+- Credit Card: 4532-1234-5678-9012
+- Bank Account: 9876543210987654
+- API Key: sk-live-1234567890abcdef1234567890abcdef
+
+Technical Information:
+- IP Address: 192.168.1.100
+- Server: 10.0.0.5
+- Database: 172.16.0.1
+
+Address Information:
+- Home: 123 Main Street, Anytown, ST 12345
+- Office: 456 Business Avenue, Suite 200, City, ST 67890
+
+Testing Instructions:
+1. Load SecureGPT extension in Chrome
+2. Go to ChatGPT or Claude
+3. Drag this file over the input field
+4. You should see TWO drop zones:
+   - LEFT: "Original Drop" (direct to AI, unsanitized)
+   - RIGHT: "Secure Drop" (auto-sanitized)
+5. Drop on the RIGHT zone to test sanitization
+6. Drop on the LEFT zone to test original behavior
+
+Expected Results:
+- RIGHT zone: Sensitive data replaced with placeholders
+- LEFT zone: Original file processed normally
