@@ -71,6 +71,7 @@ class SecureGPTSimple {
     
     this.currentPromptDiv = null;
     this.dePiiButton = null;
+    this.fileInput = null;
     
     this.init();
   }
@@ -636,9 +637,10 @@ class SecureGPTSimple {
   }
 
   openFilePicker() {
-    const fileInput = document.querySelector('input[type="file"]');
-    if (fileInput) {
-      fileInput.click();
+    if (this.fileInput) {
+      this.fileInput.click();
+    } else {
+      console.error('SecureGPT: File input not found');
     }
   }
 
@@ -663,19 +665,27 @@ class SecureGPTSimple {
   async handleSecureFileUpload(files) {
     if (!this.settings.enabled) return;
     
+    console.log('SecureGPT: Starting secure file upload for', files.length, 'files');
+    
     // Show processing indicator
     const processingIndicator = this.showProcessingIndicator(document.body, files.length);
     
     try {
       // Process files and create sanitized versions
+      console.log('SecureGPT: Creating sanitized files...');
       const sanitizedFiles = await this.createSanitizedFiles(files);
+      console.log('SecureGPT: Created', sanitizedFiles.length, 'sanitized files');
       
       // Insert sanitized content into the current prompt div
       if (this.currentPromptDiv) {
+        console.log('SecureGPT: Inserting sanitized content into prompt div');
         await this.insertSanitizedContent(this.currentPromptDiv, sanitizedFiles);
+      } else {
+        console.warn('SecureGPT: No current prompt div found');
       }
       
       // Handle the sanitized files
+      console.log('SecureGPT: Handling sanitized files');
       this.handleFileDrop(sanitizedFiles, this.currentPromptDiv);
       
     } catch (error) {
@@ -781,11 +791,15 @@ class SecureGPTSimple {
   }
 
   async insertSanitizedContent(promptDiv, sanitizedFiles) {
+    console.log('SecureGPT: Inserting sanitized content for', sanitizedFiles.length, 'files');
+    
     // Insert sanitized file content into the prompt div
     for (const file of sanitizedFiles) {
       if (file._secureGptSanitized) {
         try {
+          console.log(`SecureGPT: Inserting content for sanitized file: ${file.name}`);
           const content = await this.readFileContent(file);
+          console.log(`SecureGPT: Content length to insert: ${content.length}`);
           
           // Insert content into the prompt div
           const textNode = document.createTextNode(`\n\n--- File: ${file.name} ---\n${content}\n--- End File ---\n\n`);
@@ -795,9 +809,12 @@ class SecureGPTSimple {
           const event = new Event('input', { bubbles: true });
           promptDiv.dispatchEvent(event);
           
+          console.log(`SecureGPT: Successfully inserted content for ${file.name}`);
         } catch (error) {
           console.error('SecureGPT: Error inserting sanitized content:', error);
         }
+      } else {
+        console.log(`SecureGPT: Skipping non-sanitized file: ${file.name}`);
       }
     }
   }
@@ -947,12 +964,12 @@ class SecureGPTSimple {
     });
     
     // Create hidden file input for secure upload
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.multiple = true;
-    fileInput.accept = '.txt,.md,.csv,.json,.log,.pdf,.doc,.docx,.rtf,.js,.py,.html,.xml,.yaml';
-    fileInput.style.display = 'none';
-    fileInput.addEventListener('change', async (event) => {
+    this.fileInput = document.createElement('input');
+    this.fileInput.type = 'file';
+    this.fileInput.multiple = true;
+    this.fileInput.accept = '.txt,.md,.csv,.json,.log,.pdf,.doc,.docx,.rtf,.js,.py,.html,.xml,.yaml';
+    this.fileInput.style.display = 'none';
+    this.fileInput.addEventListener('change', async (event) => {
       const files = Array.from(event.target.files);
       if (files.length > 0) {
         await this.handleSecureFileUpload(files);
@@ -1034,6 +1051,8 @@ class SecureGPTSimple {
     
     for (const file of originalFiles) {
       try {
+        console.log(`SecureGPT: Processing file: ${file.name} (${file.size} bytes, ${file.type})`);
+        
         // Check if file format is supported
         if (!this.isSupportedFileFormat(file)) {
           console.log(`SecureGPT: Skipping unsupported file format: ${file.name}`);
@@ -1049,11 +1068,16 @@ class SecureGPTSimple {
         }
         
         // Read and sanitize file content
+        console.log(`SecureGPT: Reading content from ${file.name}`);
         const originalContent = await this.readFileContent(file);
+        console.log(`SecureGPT: Read ${originalContent.length} characters from ${file.name}`);
+        
         const sanitizedContent = this.sanitizeText(originalContent);
+        console.log(`SecureGPT: Sanitized content length: ${sanitizedContent.length}`);
         
         // Only create new file if content was actually sanitized
         if (originalContent !== sanitizedContent) {
+          console.log(`SecureGPT: Content was sanitized for ${file.name}`);
           // Create sanitized file
           const sanitizedBlob = new Blob([sanitizedContent], { type: file.type });
           const sanitizedFile = new File([sanitizedBlob], file.name, { 
@@ -1069,6 +1093,7 @@ class SecureGPTSimple {
           sanitizedFiles.push(sanitizedFile);
           console.log(`SecureGPT: Created sanitized version of ${file.name}`);
         } else {
+          console.log(`SecureGPT: No sensitive data found in ${file.name}, keeping original`);
           // No sensitive data found, keep original
           sanitizedFiles.push(file);
         }
