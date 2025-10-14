@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <user>
+        <name>Henry Anderson</name>
+        <email>henry.anderson@company.com</email>
+        <phone>+1 (555) 777-6666</phone>
+        <ssn>555-66-7777</ssn>
+        <address>
+            <street>789 Maple Street</street>
+            <city>Springfield</city>
+            <state>IL</state>
+            <zip>62701</zip>
+        </address>
+    </user>
+    
+    <financial>
+        <credit_card>4532-1234-5678-9012</credit_card>
+        <bank_account>9876543210987654</bank_account>
+        <api_key>sk-live-1234567890abcdef1234567890abcdef</api_key>
+    </financial>
+    
+    <technical>
+        <ip_address>192.168.1.100</ip_address>
+        <server>10.0.0.5</server>
+        <database>172.16.0.1</database>
+        <api_endpoint>https://api.company.com/v1</api_endpoint>
+    </technical>
+    
+    <security>
+        <encryption_key>encryption_key_1234567890abcdef</encryption_key>
+        <ssl_cert>/etc/ssl/certs/company.crt</ssl_cert>
+        <ssl_key>/etc/ssl/private/company.key</ssl_key>
+    </security>
+    
+    <notes>This XML file contains sensitive information for testing SecureGPT file drop detection.</notes>
+</configuration>

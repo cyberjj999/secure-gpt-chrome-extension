@@ -1,0 +1,24 @@
+Plain Text File Test for SecureGPT
+
+This is a plain text file containing sensitive information:
+
+Personal Data:
+- Email: alice.johnson@company.com
+- Phone: +1 (555) 987-6543
+- SSN: 987-65-4321
+
+Financial Information:
+- Credit Card: 5555-4444-3333-2222
+- Bank Account: 1234567890123456
+- API Key: sk-live-1234567890abcdef1234567890abcdef
+
+Technical Details:
+- IP Address: 192.168.1.50
+- Server: 10.0.0.100
+- Database: 172.16.0.25
+
+Address Information:
+- Home: 789 Oak Street, Springfield, IL 62701
+- Office: 321 Corporate Blvd, Suite 500, Chicago, IL 60601
+
+This file should trigger multiple sensitive data alerts when dropped into ChatGPT or Claude.

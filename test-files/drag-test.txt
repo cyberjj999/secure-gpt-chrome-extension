@@ -1,0 +1,16 @@
+Quick Drag Test File
+
+This is a simple test file to verify that the drag and drop indicator bug has been fixed.
+
+Sensitive data for testing:
+- Email: test@example.com
+- Phone: (555) 123-4567
+- SSN: 123-45-6789
+- Credit Card: 4532-1234-5678-9012
+
+When you drag this file over the input field, you should see:
+1. Only ONE "Drop files to scan for sensitive data" message
+2. No repeated or duplicate indicators
+3. Clean visual feedback without flickering
+
+The bug where multiple indicators appeared when hovering should now be fixed.

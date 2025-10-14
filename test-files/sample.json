@@ -1,0 +1,26 @@
+{
+  "user_profile": {
+    "name": "Charlie Wilson",
+    "email": "charlie.wilson@company.com",
+    "phone": "+1 (555) 123-4567",
+    "ssn": "123-45-6789",
+    "address": {
+      "street": "123 Main Street",
+      "city": "Anytown",
+      "state": "ST",
+      "zip": "12345"
+    }
+  },
+  "financial_info": {
+    "credit_card": "4532-1234-5678-9012",
+    "bank_account": "9876543210987654",
+    "api_key": "sk-live-1234567890abcdef1234567890abcdef"
+  },
+  "technical_details": {
+    "ip_address": "192.168.1.100",
+    "server": "10.0.0.5",
+    "database": "172.16.0.1",
+    "api_endpoint": "https://api.company.com/v1"
+  },
+  "notes": "This JSON file contains sensitive information for testing SecureGPT file drop detection."
+}

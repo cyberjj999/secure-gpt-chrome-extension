@@ -1,0 +1,5 @@
+Name,Email,Phone,SSN,CreditCard,IPAddress,Address
+John Doe,john.doe@company.com,(555) 123-4567,123-45-6789,4532-1234-5678-9012,192.168.1.10,"123 Main St, Anytown, ST 12345"
+Jane Smith,jane.smith@example.com,(312) 987-6543,987-65-4321,5555-4444-3333-2222,10.0.0.5,"456 Oak Ave, City, ST 67890"
+Bob Johnson,bob.johnson@corp.net,(555) 555-1234,456-78-9012,4111-1111-1111-1111,172.16.0.1,"789 Pine St, Town, ST 54321"
+Alice Brown,alice.brown@test.org,(555) 999-8888,789-01-2345,6011-1111-1111-1111,10.0.0.100,"321 Elm St, Village, ST 98765"

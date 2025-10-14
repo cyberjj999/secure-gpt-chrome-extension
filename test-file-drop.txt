@@ -1,0 +1,11 @@
+Test file for SecureGPT file drop detection
+
+This file contains some sensitive information:
+- Email: john.doe@example.com
+- Phone: (555) 123-4567
+- Credit Card: 4532-1234-5678-9012
+- SSN: 123-45-6789
+- API Key: sk-1234567890abcdef1234567890abcdef
+- IP Address: 192.168.1.1
+
+This is a test file to verify that the SecureGPT extension can detect sensitive data when files are dropped into ChatGPT or Claude input fields.

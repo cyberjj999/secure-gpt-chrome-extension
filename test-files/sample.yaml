@@ -1,0 +1,37 @@
+# YAML File Test for SecureGPT
+
+user:
+  name: "Ivy Chen"
+  email: "ivy.chen@company.com"
+  phone: "+1 (555) 888-9999"
+  ssn: "888-99-0000"
+  address:
+    street: "123 Cedar Street"
+    city: "Anytown"
+    state: "ST"
+    zip: "12345"
+
+financial:
+  credit_card: "4532-1234-5678-9012"
+  bank_account: "9876543210987654"
+  api_key: "sk-live-1234567890abcdef1234567890abcdef"
+
+technical:
+  ip_address: "192.168.1.100"
+  server: "10.0.0.5"
+  database: "172.16.0.1"
+  api_endpoint: "https://api.company.com/v1"
+
+security:
+  encryption_key: "encryption_key_1234567890abcdef"
+  ssl_cert: "/etc/ssl/certs/company.crt"
+  ssl_key: "/etc/ssl/private/company.key"
+
+database:
+  host: "192.168.1.100"
+  port: 5432
+  username: "admin"
+  password: "secret123"
+  database: "production_db"
+
+# This YAML file contains sensitive information for testing SecureGPT

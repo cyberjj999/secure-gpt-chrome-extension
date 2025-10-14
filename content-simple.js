@@ -221,6 +221,7 @@ class SecureGPTSimple {
   attachToPromptDiv(promptDiv) {
     if (promptDiv.secureGptAttached) return;
     promptDiv.secureGptAttached = true;
+    promptDiv.secureGptDragState = false; // Track drag state
     this.currentPromptDiv = promptDiv;
 
     // Listen for input events on contenteditable div
@@ -246,6 +247,104 @@ class SecureGPTSimple {
       // Catch Enter key (send message)
       if (event.key === 'Enter' && !event.shiftKey) {
         this.scanPromptDiv(promptDiv);
+      }
+    });
+
+    // Global drag end event to reset drag state
+    document.addEventListener('dragend', () => {
+      if (promptDiv.secureGptDragState) {
+        promptDiv.secureGptDragState = false;
+        promptDiv.style.border = '';
+        promptDiv.style.backgroundColor = '';
+        
+        const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
+        if (indicator) {
+          indicator.remove();
+        }
+      }
+    });
+
+    // Listen for file drop events
+    promptDiv.addEventListener('dragover', (event) => {
+      if (!this.settings.enabled) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    });
+
+    promptDiv.addEventListener('dragenter', (event) => {
+      if (!this.settings.enabled) return;
+      event.preventDefault();
+      
+      // Only add indicator if not already in drag state
+      if (!promptDiv.secureGptDragState) {
+        promptDiv.secureGptDragState = true;
+        promptDiv.style.border = '2px dashed #667eea';
+        promptDiv.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+        promptDiv.style.transition = 'all 0.2s ease';
+        
+        // Add visual indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'securegpt-drop-indicator';
+        indicator.style.cssText = `
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(102, 126, 234, 0.9);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          z-index: 1000;
+          pointer-events: none;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        `;
+        indicator.textContent = 'Drop files to scan for sensitive data';
+        promptDiv.style.position = 'relative';
+        promptDiv.appendChild(indicator);
+      }
+    });
+
+    promptDiv.addEventListener('dragleave', (event) => {
+      if (!this.settings.enabled) return;
+      event.preventDefault();
+      
+      // Only remove indicator if we're actually leaving the element
+      // Check if the related target is outside the promptDiv
+      if (!promptDiv.contains(event.relatedTarget)) {
+        promptDiv.secureGptDragState = false;
+        promptDiv.style.border = '';
+        promptDiv.style.backgroundColor = '';
+        
+        // Remove visual indicator
+        const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
+        if (indicator) {
+          indicator.remove();
+        }
+      }
+    });
+
+    promptDiv.addEventListener('drop', (event) => {
+      if (!this.settings.enabled) return;
+      event.preventDefault();
+      
+      // Reset drag state
+      promptDiv.secureGptDragState = false;
+      promptDiv.style.border = '';
+      promptDiv.style.backgroundColor = '';
+      
+      // Remove visual indicator
+      const indicator = promptDiv.querySelector('.securegpt-drop-indicator');
+      if (indicator) {
+        indicator.remove();
+      }
+      
+      const files = Array.from(event.dataTransfer.files);
+      if (files.length > 0) {
+        // Show immediate alert for file drop
+        this.showFileDropAlert(files);
+        this.handleFileDrop(files, promptDiv);
       }
     });
   }
@@ -461,6 +560,267 @@ class SecureGPTSimple {
     }
   }
 
+  async handleFileDrop(files, promptDiv) {
+    if (!this.settings.enabled) return;
+    
+    // Show processing indicator
+    const processingIndicator = this.showProcessingIndicator(promptDiv, files.length);
+    
+    let totalSensitiveDataFound = 0;
+    let processedFiles = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        // Update progress
+        this.updateProcessingIndicator(processingIndicator, i + 1, files.length, file.name);
+        
+        // Check file size (limit to 10MB for security)
+        if (file.size > 10 * 1024 * 1024) {
+          this.showNotification(`File ${file.name} is too large (>10MB). Skipping.`);
+          continue;
+        }
+        
+        // Check if file format is supported
+        if (!this.isSupportedFileFormat(file)) {
+          this.showNotification(`File ${file.name} is not a supported format. Supported: PDF, TXT, DOC, DOCX, MD, CSV, JSON, LOG. Skipping.`);
+          continue;
+        }
+        
+        const fileContent = await this.readFileContent(file);
+        const sensitiveDataFound = this.scanFileContent(fileContent, file.name);
+        
+        if (sensitiveDataFound > 0) {
+          totalSensitiveDataFound += sensitiveDataFound;
+          this.showNotification(`Found ${sensitiveDataFound} sensitive data pattern(s) in ${file.name}`);
+        } else {
+          this.showNotification(`No sensitive data found in ${file.name}`);
+        }
+        
+        processedFiles++;
+        
+      } catch (error) {
+        console.error('SecureGPT: Error processing file:', file.name, error);
+        this.showNotification(`Error processing ${file.name}: ${error.message}`);
+      }
+    }
+    
+    // Remove processing indicator
+    if (processingIndicator && processingIndicator.parentNode) {
+      processingIndicator.parentNode.removeChild(processingIndicator);
+    }
+    
+    if (processedFiles > 0) {
+      if (totalSensitiveDataFound > 0) {
+        this.showEnhancedNotification(
+          `⚠️ Sensitive Data Found!`, 
+          `Found ${totalSensitiveDataFound} sensitive data pattern(s) across ${processedFiles} file(s). Review before sending.`,
+          'warning'
+        );
+      } else {
+        this.showEnhancedNotification(
+          `✅ Files Scanned Successfully`, 
+          `No sensitive data detected in ${processedFiles} file(s). Safe to proceed.`,
+          'success'
+        );
+      }
+    }
+  }
+
+  showProcessingIndicator(promptDiv, totalFiles) {
+    const indicator = document.createElement('div');
+    indicator.className = 'securegpt-processing-indicator';
+    indicator.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(102, 126, 234, 0.95);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1001;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      text-align: center;
+      min-width: 200px;
+    `;
+    
+    indicator.innerHTML = `
+      <div style="margin-bottom: 8px;">
+        <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+      <div>Processing files...</div>
+      <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">0 / ${totalFiles}</div>
+    `;
+    
+    // Add CSS animation
+    if (!document.querySelector('#securegpt-spinner-styles')) {
+      const style = document.createElement('style');
+      style.id = 'securegpt-spinner-styles';
+      style.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    promptDiv.style.position = 'relative';
+    promptDiv.appendChild(indicator);
+    return indicator;
+  }
+
+  updateProcessingIndicator(indicator, current, total, fileName) {
+    if (indicator) {
+      const progressText = indicator.querySelector('div:last-child');
+      if (progressText) {
+        progressText.textContent = `${current} / ${total} - ${fileName}`;
+      }
+    }
+  }
+
+  isSupportedFileFormat(file) {
+    // Define supported file formats with their MIME types and extensions
+    const supportedFormats = {
+      // Text files
+      'text/plain': ['.txt'],
+      'text/markdown': ['.md', '.markdown'],
+      'text/csv': ['.csv'],
+      'application/json': ['.json'],
+      'text/x-log': ['.log'],
+      
+      // PDF files
+      'application/pdf': ['.pdf'],
+      
+      // Microsoft Word documents
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      
+      // Rich Text Format
+      'application/rtf': ['.rtf'],
+      
+      // Plain text with various extensions
+      'text/': ['.txt', '.md', '.csv', '.json', '.log', '.conf', '.ini', '.cfg'],
+      
+      // Generic text files
+      'text/': ['.text', '.readme', '.changelog', '.license']
+    };
+    
+    // Check MIME type first
+    for (const [mimeType, extensions] of Object.entries(supportedFormats)) {
+      if (file.type && file.type.startsWith(mimeType)) {
+        return true;
+      }
+    }
+    
+    // Check file extension as fallback
+    const fileName = file.name.toLowerCase();
+    const supportedExtensions = [
+      '.txt', '.md', '.markdown', '.csv', '.json', '.log',
+      '.pdf', '.doc', '.docx', '.rtf',
+      '.text', '.readme', '.changelog', '.license', '.conf', '.ini', '.cfg'
+    ];
+    
+    return supportedExtensions.some(ext => fileName.endsWith(ext));
+  }
+
+  readFileContent(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      // Determine how to read the file based on its type
+      if (file.type === 'application/pdf') {
+        // For PDF files, we'll need to use a different approach
+        // For now, we'll try to read as text (this won't work for binary PDFs)
+        reader.onload = (e) => {
+          const content = e.target.result;
+          // Basic check if it's actually readable text
+          if (this.isReadableText(content)) {
+            resolve(content);
+          } else {
+            reject(new Error('PDF file appears to be binary and cannot be read as text. Please convert to text format first.'));
+          }
+        };
+        reader.readAsText(file);
+      } else if (file.type.startsWith('application/vnd.openxmlformats-officedocument') || 
+                 file.type === 'application/msword') {
+        // For DOC/DOCX files, we'll try to read as text
+        // Note: This is a basic approach and may not work for all DOC files
+        reader.onload = (e) => {
+          const content = e.target.result;
+          if (this.isReadableText(content)) {
+            resolve(content);
+          } else {
+            reject(new Error('Document file appears to be binary and cannot be read as text. Please convert to text format first.'));
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        // For text files, read normally
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsText(file);
+      }
+      
+      reader.onerror = (e) => reject(new Error('Failed to read file'));
+    });
+  }
+
+  isReadableText(content) {
+    // Check if content is readable text (not binary)
+    // Look for printable characters and reasonable text patterns
+    const printableChars = content.replace(/[^\x20-\x7E\s]/g, '').length;
+    const totalChars = content.length;
+    
+    // If more than 70% of characters are printable, consider it readable text
+    return totalChars > 0 && (printableChars / totalChars) > 0.7;
+  }
+
+  scanFileContent(content, fileName) {
+    let sensitiveDataCount = 0;
+    
+    // Scan for all patterns
+    for (const [patternName, pattern] of Object.entries(this.patterns)) {
+      if (this.settings.patterns[patternName]) {
+        const matches = content.match(pattern.regex);
+        if (matches) {
+          sensitiveDataCount += matches.length;
+          console.log(`SecureGPT: Found ${matches.length} ${patternName} pattern(s) in ${fileName}:`, matches);
+        }
+      }
+    }
+    
+    // Scan custom patterns
+    if (this.settings.customPatterns && this.settings.customPatterns.hardcodedStrings) {
+      this.settings.customPatterns.hardcodedStrings.forEach(item => {
+        if (content.includes(item.string)) {
+          sensitiveDataCount++;
+          console.log(`SecureGPT: Found hardcoded string "${item.string}" in ${fileName}`);
+        }
+      });
+    }
+    
+    if (this.settings.customPatterns && this.settings.customPatterns.regexPatterns) {
+      this.settings.customPatterns.regexPatterns.forEach(item => {
+        try {
+          const regex = new RegExp(item.pattern, 'g');
+          const matches = content.match(regex);
+          if (matches) {
+            sensitiveDataCount += matches.length;
+            console.log(`SecureGPT: Found ${matches.length} custom regex pattern(s) in ${fileName}:`, matches);
+          }
+        } catch (error) {
+          console.warn('SecureGPT: Invalid custom regex pattern:', item.pattern, error);
+        }
+      });
+    }
+    
+    return sensitiveDataCount;
+  }
+
   manualDePii() {
     // Look for various AI input elements
     const selectors = [
@@ -582,6 +942,200 @@ class SecureGPTSimple {
 
   escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  showFileDropAlert(files) {
+    // Play a subtle sound alert if possible
+    this.playDropSound();
+    
+    // Create a prominent alert for file drop
+    const alert = document.createElement('div');
+    alert.className = 'securegpt-file-drop-alert';
+    alert.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      z-index: 10002;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+      text-align: center;
+      min-width: 300px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      animation: securegpt-alert-pop 0.3s ease-out;
+    `;
+    
+    const fileNames = files.map(f => f.name).join(', ');
+    const fileCount = files.length;
+    
+    alert.innerHTML = `
+      <div style="margin-bottom: 12px; font-size: 24px;">📁</div>
+      <div style="margin-bottom: 8px;">File${fileCount > 1 ? 's' : ''} Dropped!</div>
+      <div style="font-size: 14px; opacity: 0.9; margin-bottom: 12px;">
+        ${fileCount} file${fileCount > 1 ? 's' : ''}: ${fileNames.length > 50 ? fileNames.substring(0, 50) + '...' : fileNames}
+      </div>
+      <div style="font-size: 12px; opacity: 0.8;">
+        Scanning for sensitive data...
+      </div>
+    `;
+    
+    // Add CSS animation
+    if (!document.querySelector('#securegpt-alert-styles')) {
+      const style = document.createElement('style');
+      style.id = 'securegpt-alert-styles';
+      style.textContent = `
+        @keyframes securegpt-alert-pop {
+          0% { 
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+          }
+          100% { 
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(alert);
+    
+    // Also show a browser notification if permission is granted
+    this.showBrowserNotification(`SecureGPT: ${fileCount} file${fileCount > 1 ? 's' : ''} dropped for scanning`);
+    
+    // Auto-remove after 4 seconds (longer to ensure user sees it)
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.style.animation = 'securegpt-alert-pop 0.3s ease-out reverse';
+        setTimeout(() => {
+          if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+          }
+        }, 300);
+      }
+    }, 4000);
+  }
+
+  playDropSound() {
+    try {
+      // Create a subtle audio context for drop sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+      // Silently fail if audio context is not available
+      console.log('SecureGPT: Audio context not available');
+    }
+  }
+
+  showBrowserNotification(message) {
+    // Request notification permission and show browser notification
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification('SecureGPT', {
+          body: message,
+          icon: chrome.runtime.getURL('icons/icon48.png'),
+          tag: 'securegpt-file-drop'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification('SecureGPT', {
+              body: message,
+              icon: chrome.runtime.getURL('icons/icon48.png'),
+              tag: 'securegpt-file-drop'
+            });
+          }
+        });
+      }
+    }
+  }
+
+  showEnhancedNotification(title, message, type = 'info') {
+    // Create an enhanced notification with title and message
+    const notification = document.createElement('div');
+    
+    const colors = {
+      success: { bg: '#4CAF50', border: '#45a049' },
+      warning: { bg: '#ff9800', border: '#e68900' },
+      error: { bg: '#f44336', border: '#da190b' },
+      info: { bg: '#2196F3', border: '#0b7dda' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${color.bg};
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      z-index: 10001;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      max-width: 350px;
+      border-left: 4px solid ${color.border};
+      animation: securegpt-notification-slide 0.3s ease-out;
+    `;
+    
+    notification.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 4px; font-size: 15px;">${title}</div>
+      <div style="opacity: 0.9; line-height: 1.4;">${message}</div>
+    `;
+    
+    // Add CSS animation
+    if (!document.querySelector('#securegpt-notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'securegpt-notification-styles';
+      style.textContent = `
+        @keyframes securegpt-notification-slide {
+          0% { 
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          100% { 
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds (longer for important messages)
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.style.animation = 'securegpt-notification-slide 0.3s ease-out reverse';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }
+    }, 5000);
   }
 
   showNotification(message) {

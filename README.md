@@ -6,6 +6,7 @@ A Chrome extension that automatically detects and removes sensitive information 
 
 - **Multi-Platform Support**: Works on 8+ AI chat platforms including ChatGPT, Claude, Gemini, LLaMA, Mistral AI, Grok, Cohere, and Perplexity AI
 - **Real-time Detection**: Automatically scans text as you type or paste into AI chat platforms
+- **File Drop Detection**: Detects and scans files when dropped into input fields for sensitive data
 - **Comprehensive Coverage**: Detects 11 types of sensitive information:
   - Email addresses
   - Phone numbers (US and international)
@@ -45,10 +46,39 @@ A Chrome extension that automatically detects and removes sensitive information 
 1. **Install the extension** following the steps above
 2. **Navigate to any supported AI platform** (ChatGPT, Claude, Gemini, etc.)
 3. **Look for the shield badge** 🛡️ in your extension toolbar - this indicates SecureGPT is active
-4. **Two ways to protect your data:**
+4. **Three ways to protect your data:**
    - **Auto-scan**: Type or paste content and sensitive information is automatically replaced
+   - **File Drop**: Drag and drop text files into the input field to scan for sensitive data
    - **Manual De-PII**: Click the 🛡️ button next to the send button to manually sanitize text before sending
 5. **Watch as sensitive information is replaced** with customizable placeholders like `[EMAIL_REDACTED]`, `[CREDIT_CARD_REDACTED]`, etc.
+
+### File Drop Detection
+
+SecureGPT now supports file drop detection! Simply drag and drop text files into the input field of any supported AI platform:
+
+- **Supported file types**: `.pdf`, `.txt`, `.doc`, `.docx`, `.md`, `.csv`, `.json`, `.log`, `.rtf`, and other text files
+- **File size limit**: 10MB maximum for security
+- **Visual feedback**: See a progress indicator while files are being processed
+- **Real-time scanning**: Files are scanned for all supported sensitive data patterns
+- **Notification system**: Get notified about sensitive data found in dropped files
+
+**Supported File Formats:**
+- **Text Files**: `.txt`, `.md`, `.csv`, `.json`, `.log`, `.conf`, `.ini`, `.cfg`
+- **Documents**: `.pdf`, `.doc`, `.docx`, `.rtf`
+- **Code Files**: `.js`, `.py`, `.html`, `.css`, `.xml`, `.yaml`
+- **Data Files**: `.csv`, `.tsv`, `.json`, `.xml`
+
+**File Format Notes:**
+- **PDF Files**: Basic text extraction (may not work with image-based PDFs)
+- **Word Documents**: Text extraction from DOC/DOCX files
+- **Binary Files**: Not supported (images, videos, executables)
+- **Large Files**: 10MB size limit for security
+
+**How it works:**
+1. Drag a supported file over the input field - you'll see a visual indicator
+2. Drop the file - SecureGPT will process it and show progress
+3. Get notified about any sensitive data found
+4. Review the results before sending your message
 
 ### Example
 

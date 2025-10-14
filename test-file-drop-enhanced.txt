@@ -1,0 +1,24 @@
+Enhanced Test File for SecureGPT File Drop Detection
+
+This file contains various types of sensitive information to test the alert system:
+
+Personal Information:
+- Email: jane.smith@company.com
+- Phone: +1 (555) 987-6543
+- SSN: 987-65-4321
+
+Financial Information:
+- Credit Card: 5555-4444-3333-2222
+- Bank Account: 1234567890123456
+- API Key: sk-live-1234567890abcdef1234567890abcdef
+
+Technical Information:
+- IP Address: 10.0.0.1
+- Server: 192.168.1.100
+- Database: 172.16.0.5
+
+Address Information:
+- Home: 123 Main Street, Anytown, ST 12345
+- Office: 456 Business Ave, Suite 100, City, ST 67890
+
+This test file should trigger multiple alerts when dropped into ChatGPT or Claude input fields, demonstrating the enhanced notification system.
