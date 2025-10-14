@@ -71,7 +71,10 @@ class SecureGPTSimple {
     
     this.currentPromptDiv = null;
     this.dePiiButton = null;
+    this.buttonHost = null;
     this.fileInput = null;
+    this.attachedElements = new WeakSet();
+    this.observers = new Map();
     
     this.init();
   }
@@ -93,6 +96,8 @@ class SecureGPTSimple {
     }
 
     this.setupEventListeners();
+    this.setupDebugging();
+    this.createFloatingFallback();
   }
 
   isWebsiteEnabled() {
@@ -192,35 +197,155 @@ class SecureGPTSimple {
   checkExistingElements() {
     console.log('SecureGPT: Checking existing elements on page');
     
-    // Look for existing prompt divs on various AI platforms
-    const selectors = [
-      '#prompt-textarea', // ChatGPT
-      'textarea[placeholder*="message" i]', // General message textareas
-      'textarea[placeholder*="ask" i]', // Ask prompts
-      'textarea[placeholder*="prompt" i]', // Prompt textareas
-      'textarea[aria-label*="message" i]', // Aria label message
-      'textarea[aria-label*="prompt" i]', // Aria label prompt
-      'div[contenteditable="true"]', // Contenteditable divs
-      'div[role="textbox"]', // Textbox role divs
-      'textarea[id*="input"]', // Input textareas
-      'textarea[id*="message"]', // Message textareas
-      'textarea[class*="prompt"]', // Prompt class textareas
-      'textarea[class*="input"]', // Input class textareas
-      'textarea[class*="message"]' // Message class textareas
-    ];
-    
-    for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log('SecureGPT: Found prompt element with selector:', selector);
-        this.attachToPromptDiv(element);
-        break; // Only attach to the first found element
-      }
+    // Use improved element detection with scoring
+    const targetElement = this.findTargetElement();
+    if (targetElement) {
+      console.log('SecureGPT: Found target element:', targetElement);
+      this.attachToPromptDiv(targetElement);
     }
     
     // Inject De-PII button
     console.log('SecureGPT: Attempting to inject De-PII button');
     this.injectDePiiButton();
+  }
+
+  findInputElements() {
+    const selectors = [
+      'textarea[placeholder*="message" i]',
+      'div[contenteditable="true"]',
+      'div[role="textbox"]',
+      'textarea[id*="prompt"]',
+      'textarea[id*="input"]',
+      'textarea[placeholder*="ask" i]',
+      'textarea[placeholder*="prompt" i]',
+      'textarea[aria-label*="message" i]',
+      'textarea[aria-label*="prompt" i]',
+      'textarea[class*="prompt"]',
+      'textarea[class*="input"]',
+      'textarea[class*="message"]'
+    ];
+    
+    const candidates = document.querySelectorAll(selectors.join(','));
+    return Array.from(candidates).filter(el => {
+      const rect = el.getBoundingClientRect();
+      return rect.width > 200 && rect.height > 30;
+    });
+  }
+
+  scoreElement(element) {
+    let score = 0;
+    const rect = element.getBoundingClientRect();
+    
+    // Size scoring
+    if (rect.width > 300) score += 2;
+    if (rect.height > 50) score += 2;
+    
+    // Type scoring
+    if (element.tagName === 'TEXTAREA') score += 1;
+    if (element.getAttribute('role') === 'textbox') score += 1;
+    if (element.closest('form')) score += 1;
+    
+    return score;
+  }
+
+  findTargetElement() {
+    // Try platform-specific adapters first
+    const platformAdapters = {
+      chatgpt: {
+        test: () => location.hostname.includes('openai.com') || location.hostname.includes('chatgpt.com'),
+        selectors: ['#prompt-textarea', 'textarea[placeholder*="message" i]']
+      },
+      claude: {
+        test: () => location.hostname.includes('claude.ai'),
+        selectors: ['div[contenteditable="true"]', 'div[role="textbox"]']
+      },
+      gemini: {
+        test: () => location.hostname.includes('gemini.google.com'),
+        selectors: ['textarea', 'div[contenteditable="true"]']
+      }
+    };
+    
+    for (const [platform, adapter] of Object.entries(platformAdapters)) {
+      if (adapter.test()) {
+        for (const selector of adapter.selectors) {
+          const element = document.querySelector(selector);
+          if (element && this.isVisible(element)) {
+            console.log(`SecureGPT: Found ${platform} element:`, selector);
+            return element;
+          }
+        }
+      }
+    }
+    
+    // Fallback to generic detection
+    const candidates = this.findInputElements();
+    if (candidates.length === 0) return null;
+    
+    // Score and pick best candidate
+    const scored = candidates.map(el => ({
+      element: el,
+      score: this.scoreElement(el)
+    }));
+    
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].element;
+  }
+
+  isVisible(element) {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return (rect.width > 0 && rect.height > 0 &&
+            style.visibility !== 'hidden' &&
+            style.display !== 'none');
+  }
+
+  createIsolatedButton() {
+    const host = document.createElement('div');
+    host.style.cssText = `
+      position: absolute;
+      z-index: 2147483647;
+      pointer-events: auto;
+    `;
+    
+    const shadow = host.attachShadow({ mode: 'open' });
+    
+    // Inject styles into shadow DOM
+    const style = document.createElement('style');
+    style.textContent = `
+      .securegpt-btn {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        font-weight: 500;
+        margin-right: 8px;
+        padding: 8px;
+      }
+      .securegpt-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+    `;
+    shadow.appendChild(style);
+    
+    // Create button
+    const button = document.createElement('button');
+    button.className = 'securegpt-btn';
+    button.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
+    button.title = 'SecureGPT: Click to open menu with De-PII, file upload, and settings';
+    
+    shadow.appendChild(button);
+    return { host, button };
   }
 
   attachToPromptDiv(promptDiv) {
@@ -678,24 +803,10 @@ class SecureGPTSimple {
       }
     }
 
-    // Create De-PII button with file upload functionality
-    this.dePiiButton = document.createElement('button');
-    this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
-    this.dePiiButton.title = 'SecureGPT: Click to open menu with De-PII, file upload, and settings';
-    this.dePiiButton.style.cssText = `
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      margin-right: 8px;
-      padding: 8px;
-      transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
-      font-weight: 500;
-      position: relative;
-    `;
+    // Create isolated button with Shadow DOM
+    const buttonData = this.createIsolatedButton();
+    this.dePiiButton = buttonData.button;
+    this.buttonHost = buttonData.host;
     
     // Hover effect
     this.dePiiButton.addEventListener('mouseenter', () => {
@@ -732,7 +843,7 @@ class SecureGPTSimple {
     if (sendButton && sendButton.parentNode) {
       console.log('SecureGPT: Inserting button before send button');
       // Insert before send button
-      sendButton.parentNode.insertBefore(this.dePiiButton, sendButton);
+      sendButton.parentNode.insertBefore(this.buttonHost, sendButton);
       console.log('SecureGPT: Button successfully inserted before send button');
       return;
     }
@@ -743,7 +854,7 @@ class SecureGPTSimple {
       const claudeButton = document.querySelector('button[aria-label="Send message"]');
       if (claudeButton && claudeButton.parentNode) {
         console.log('SecureGPT: Found Claude send button, inserting before it');
-        claudeButton.parentNode.insertBefore(this.dePiiButton, claudeButton);
+        claudeButton.parentNode.insertBefore(this.buttonHost, claudeButton);
         return;
       }
       
@@ -751,7 +862,7 @@ class SecureGPTSimple {
       const buttonContainer = document.querySelector('div.flex.shrink-0');
       if (buttonContainer) {
         console.log('SecureGPT: Found Claude button container, inserting at end');
-        buttonContainer.appendChild(this.dePiiButton);
+        buttonContainer.appendChild(this.buttonHost);
         return;
       }
     }
@@ -766,12 +877,12 @@ class SecureGPTSimple {
         const firstDsButton = dsButtons[0];
         if (firstDsButton.parentNode) {
           // Tweak size to visually match DeepSeek controls
-          this.dePiiButton.style.height = '34px';
-          this.dePiiButton.style.padding = '0 8px';
-          this.dePiiButton.style.display = 'inline-flex';
-          this.dePiiButton.style.alignItems = 'center';
-          this.dePiiButton.style.justifyContent = 'center';
-          firstDsButton.parentNode.insertBefore(this.dePiiButton, firstDsButton);
+          this.buttonHost.style.height = '34px';
+          this.buttonHost.style.padding = '0 8px';
+          this.buttonHost.style.display = 'inline-flex';
+          this.buttonHost.style.alignItems = 'center';
+          this.buttonHost.style.justifyContent = 'center';
+          firstDsButton.parentNode.insertBefore(this.buttonHost, firstDsButton);
           return;
         }
       }
@@ -790,7 +901,7 @@ class SecureGPTSimple {
         const lastButton = candidateButtons[candidateButtons.length - 1];
         if (lastButton && lastButton.parentNode) {
           console.log('SecureGPT: Inserting button before last form button');
-          lastButton.parentNode.insertBefore(this.dePiiButton, lastButton);
+          lastButton.parentNode.insertBefore(this.buttonHost, lastButton);
           console.log('SecureGPT: Button successfully inserted before form button');
           return;
         }
@@ -809,17 +920,17 @@ class SecureGPTSimple {
         } else {
           container.appendChild(wrapper);
         }
-        wrapper.appendChild(this.dePiiButton);
+        wrapper.appendChild(this.buttonHost);
         console.log('SecureGPT: Button inserted into wrapper');
       }
     } else {
       // Final fallback: append to body with fixed positioning
       console.log('SecureGPT: Using final fallback - appending to body');
-      this.dePiiButton.style.position = 'fixed';
-      this.dePiiButton.style.top = '20px';
-      this.dePiiButton.style.right = '20px';
-      this.dePiiButton.style.zIndex = '10000';
-      document.body.appendChild(this.dePiiButton);
+      this.buttonHost.style.position = 'fixed';
+      this.buttonHost.style.top = '20px';
+      this.buttonHost.style.right = '20px';
+      this.buttonHost.style.zIndex = '10000';
+      document.body.appendChild(this.buttonHost);
       console.log('SecureGPT: Button appended to body with fixed positioning');
     }
   }
@@ -1535,6 +1646,121 @@ class SecureGPTSimple {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  setupDebugging() {
+    // Add debug tools to window
+    window.secureGPTDebug = {
+      findTargets: () => {
+        const targets = this.findInputElements();
+        console.log('SecureGPT: Found input elements:', targets);
+        return targets;
+      },
+      
+      testInjection: () => {
+        const target = this.findTargetElement();
+        if (target) {
+          console.log('SecureGPT: Target element:', target);
+          const button = this.createIsolatedButton();
+          this.buttonHost = button.host;
+          this.dePiiButton = button.button;
+          document.body.appendChild(button.host);
+          console.log('SecureGPT: Button injected successfully');
+        } else {
+          console.log('SecureGPT: No target element found');
+        }
+      },
+      
+      checkObservers: () => {
+        console.log('SecureGPT: Active observers:', this.observers);
+      },
+      
+      runTests: () => {
+        this.runInjectionTests();
+      }
+    };
+    
+    console.log('SecureGPT Debug Tools Available:');
+    console.log('- secureGPTDebug.findTargets()');
+    console.log('- secureGPTDebug.testInjection()');
+    console.log('- secureGPTDebug.checkObservers()');
+    console.log('- secureGPTDebug.runTests()');
+  }
+
+  createFloatingFallback() {
+    // Create floating fallback button
+    const fallback = document.createElement('div');
+    fallback.id = 'securegpt-fallback';
+    fallback.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      z-index: 2147483647;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    `;
+    
+    fallback.innerHTML = '🛡️';
+    fallback.title = 'SecureGPT: Click to open menu';
+    
+    fallback.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleSecureGPTPopup();
+    });
+    
+    document.body.appendChild(fallback);
+    
+    // Show fallback if no button is found after 3 seconds
+    setTimeout(() => {
+      if (!this.dePiiButton || !document.contains(this.buttonHost)) {
+        fallback.style.display = 'flex';
+        console.log('SecureGPT: Showing floating fallback button');
+      }
+    }, 3000);
+  }
+
+  runInjectionTests() {
+    const tests = [
+      {
+        name: 'Element Detection',
+        test: () => this.findInputElements().length > 0
+      },
+      {
+        name: 'Button Creation',
+        test: () => {
+          const button = this.createIsolatedButton();
+          return button && button.host && button.button;
+        }
+      },
+      {
+        name: 'Shadow DOM Isolation',
+        test: () => {
+          const button = this.createIsolatedButton();
+          return button.host.shadowRoot !== null;
+        }
+      },
+      {
+        name: 'Platform Detection',
+        test: () => {
+          const target = this.findTargetElement();
+          return target !== null;
+        }
+      }
+    ];
+    
+    console.log('SecureGPT: Running Injection Tests:');
+    tests.forEach(test => {
+      const result = test.test();
+      console.log(`${test.name}: ${result ? '✅ PASS' : '❌ FAIL'}`);
+    });
   }
 }
 
