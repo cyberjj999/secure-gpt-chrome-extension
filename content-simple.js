@@ -151,19 +151,48 @@ class SecureGPTSimple {
             if (node.nodeType === Node.ELEMENT_NODE) {
               // Look for various AI input elements
               const selectors = [
-                '#prompt-textarea', // ChatGPT
+                // ChatGPT specific
+                '#prompt-textarea',
+                // Textarea patterns
                 'textarea[placeholder*="message" i]',
                 'textarea[placeholder*="ask" i]',
                 'textarea[placeholder*="prompt" i]',
                 'textarea[aria-label*="message" i]',
                 'textarea[aria-label*="prompt" i]',
-                'div[contenteditable="true"]',
-                'div[role="textbox"]',
                 'textarea[id*="input"]',
                 'textarea[id*="message"]',
                 'textarea[class*="prompt"]',
                 'textarea[class*="input"]',
-                'textarea[class*="message"]'
+                'textarea[class*="message"]',
+                // ContentEditable patterns
+                'div[contenteditable="true"]',
+                'div[role="textbox"]',
+                'div[class*="prompt" i]',
+                'div[class*="input" i]',
+                'div[class*="message" i]',
+                'div[class*="textbox" i]',
+                'div[class*="textarea" i]',
+                'div[id*="prompt"]',
+                'div[id*="input"]',
+                'div[id*="message"]',
+                // Data attributes (React patterns)
+                '[data-testid*="prompt"]',
+                '[data-testid*="input"]',
+                '[data-testid*="textarea"]',
+                '[data-testid*="message"]',
+                '[data-testid*="textbox"]',
+                '[data-cy*="prompt"]',
+                '[data-cy*="input"]',
+                '[data-cy*="textarea"]',
+                '[data-cy*="message"]',
+                '[data-cy*="textbox"]',
+                // Aria and placeholder patterns
+                'div[aria-label*="message" i]',
+                'div[aria-label*="input" i]',
+                'div[aria-label*="prompt" i]',
+                'div[placeholder*="message" i]',
+                'div[placeholder*="ask" i]',
+                'div[placeholder*="prompt" i]'
               ];
               
               let foundElement = null;
@@ -176,8 +205,8 @@ class SecureGPTSimple {
               }
               
               if (foundElement) {
-                console.log('SecureGPT: MutationObserver found element:', foundElement);
-                console.log('SecureGPT: Element details:', {
+                console.log('🔍 SecureGPT: MutationObserver found element:', foundElement);
+                console.log('📋 SecureGPT: Element details:', {
                   tagName: foundElement.tagName,
                   id: foundElement.id,
                   className: foundElement.className,
@@ -185,7 +214,15 @@ class SecureGPTSimple {
                   role: foundElement.getAttribute('role'),
                   contenteditable: foundElement.getAttribute('contenteditable'),
                   dataTestId: foundElement.getAttribute('data-testid'),
-                  dataCy: foundElement.getAttribute('data-cy')
+                  dataCy: foundElement.getAttribute('data-cy'),
+                  ariaLabel: foundElement.getAttribute('aria-label'),
+                  rect: foundElement.getBoundingClientRect(),
+                  isVisible: this.isVisible(foundElement),
+                  parentElement: foundElement.parentElement ? {
+                    tagName: foundElement.parentElement.tagName,
+                    className: foundElement.parentElement.className,
+                    id: foundElement.parentElement.id
+                  } : null
                 });
                 this.attachToPromptDiv(foundElement);
               }
@@ -301,16 +338,38 @@ class SecureGPTSimple {
         ]
       },
       claude: {
-        test: () => location.hostname.includes('claude.ai'),
+        test: () => location.hostname.includes('claude.ai') || location.href.includes('claude.ai/new'),
         selectors: [
+          // Core input field selectors
           'div[contenteditable="true"]',
           'div[role="textbox"]',
+          // Data attribute selectors (most likely for React apps)
           '[data-testid*="input"]',
           '[data-testid*="prompt"]',
           '[data-testid*="message"]',
+          '[data-testid*="textarea"]',
+          '[data-testid*="textbox"]',
           '[data-cy*="input"]',
           '[data-cy*="prompt"]',
-          '[data-cy*="message"]'
+          '[data-cy*="message"]',
+          '[data-cy*="textarea"]',
+          '[data-cy*="textbox"]',
+          // Class name patterns (common in Claude's styling)
+          'div[class*="input" i]',
+          'div[class*="prompt" i]',
+          'div[class*="message" i]',
+          'div[class*="textbox" i]',
+          'div[class*="textarea" i]',
+          // ID patterns
+          'div[id*="input" i]',
+          'div[id*="prompt" i]',
+          'div[id*="message" i]',
+          // Common Claude patterns
+          'div[placeholder*="message" i]',
+          'div[placeholder*="ask" i]',
+          'div[aria-label*="message" i]',
+          'div[aria-label*="input" i]',
+          'div[aria-label*="prompt" i]'
         ]
       },
       gemini: {
@@ -1789,7 +1848,7 @@ class SecureGPTSimple {
       findings: {}
     };
 
-    // 1. Find all potential input elements
+    // 1. Find all potential input elements using comprehensive selectors
     const inputSelectors = [
       'textarea',
       'input[type="text"]',
@@ -1798,7 +1857,34 @@ class SecureGPTSimple {
       '[contenteditable=""]',
       '[role="textbox"]',
       'div[contenteditable]',
-      'div[role="textbox"]'
+      'div[role="textbox"]',
+      // Data attribute selectors
+      '[data-testid*="prompt"]',
+      '[data-testid*="input"]',
+      '[data-testid*="textarea"]',
+      '[data-testid*="message"]',
+      '[data-testid*="textbox"]',
+      '[data-cy*="prompt"]',
+      '[data-cy*="input"]',
+      '[data-cy*="textarea"]',
+      '[data-cy*="message"]',
+      '[data-cy*="textbox"]',
+      // Class and ID patterns
+      'div[class*="input" i]',
+      'div[class*="prompt" i]',
+      'div[class*="message" i]',
+      'div[class*="textbox" i]',
+      'div[class*="textarea" i]',
+      'div[id*="input" i]',
+      'div[id*="prompt" i]',
+      'div[id*="message" i]',
+      // Aria and placeholder patterns
+      'div[aria-label*="message" i]',
+      'div[aria-label*="input" i]',
+      'div[aria-label*="prompt" i]',
+      'div[placeholder*="message" i]',
+      'div[placeholder*="ask" i]',
+      'div[placeholder*="prompt" i]'
     ];
 
     const inputElements = [];
@@ -1806,30 +1892,29 @@ class SecureGPTSimple {
       const elements = document.querySelectorAll(selector);
       elements.forEach(el => {
         const rect = el.getBoundingClientRect();
-        if (rect.width > 100 && rect.height > 20) { // Only visible elements
+        if (rect.width > 50 && rect.height > 20) { // Only reasonably sized elements
           inputElements.push({
             selector: selector,
-            element: el,
             tagName: el.tagName,
             id: el.id,
             className: el.className,
-            placeholder: el.placeholder,
+            contentEditable: el.getAttribute('contenteditable'),
             role: el.getAttribute('role'),
-            contenteditable: el.getAttribute('contenteditable'),
+            placeholder: el.getAttribute('placeholder'),
             ariaLabel: el.getAttribute('aria-label'),
+            dataTestId: el.getAttribute('data-testid'),
+            dataCy: el.getAttribute('data-cy'),
             rect: {
               width: rect.width,
               height: rect.height,
               top: rect.top,
               left: rect.left
             },
-            visible: rect.width > 0 && rect.height > 0,
-            parentElement: el.parentElement ? {
-              tagName: el.parentElement.tagName,
-              className: el.parentElement.className,
-              id: el.parentElement.id
-            } : null,
-            textContent: el.textContent ? el.textContent.substring(0, 100) : null
+            isVisible: rect.width > 0 && rect.height > 0 &&
+                      getComputedStyle(el).visibility !== 'hidden' &&
+                      getComputedStyle(el).display !== 'none',
+            textContent: el.textContent ? el.textContent.substring(0, 100) : null,
+            innerHTML: el.innerHTML ? el.innerHTML.substring(0, 100) : null
           });
         }
       });
@@ -1932,43 +2017,60 @@ class SecureGPTSimple {
   }
 
   createFloatingFallback() {
-    // Create floating fallback button
+    // Create floating fallback button with proper SecureGPT branding
     const fallback = document.createElement('div');
     fallback.id = 'securegpt-fallback';
     fallback.style.cssText = `
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 50%;
       z-index: 2147483647;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      transition: all 0.2s ease;
+      border: 2px solid rgba(255, 255, 255, 0.2);
     `;
-    
-    fallback.innerHTML = '🛡️';
+
+    // Use the actual SecureGPT icon
+    const iconImg = document.createElement('img');
+    iconImg.src = chrome.runtime.getURL('icons/icon48.png');
+    iconImg.style.cssText = `
+      width: 32px;
+      height: 32px;
+      filter: brightness(0) invert(1);
+    `;
+
+    fallback.appendChild(iconImg);
     fallback.title = 'SecureGPT: Click to open menu';
-    
+
+    // Add hover effects
+    fallback.addEventListener('mouseover', () => {
+      fallback.style.transform = 'scale(1.05)';
+      fallback.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+    });
+
+    fallback.addEventListener('mouseout', () => {
+      fallback.style.transform = 'scale(1)';
+      fallback.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
+    });
+
     fallback.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.toggleSecureGPTPopup();
+      this.showModal();
     });
-    
+
     document.body.appendChild(fallback);
-    
-    // Show fallback if no button is found after 3 seconds
-    setTimeout(() => {
-      if (!this.dePiiButton || !document.contains(this.buttonHost)) {
-        fallback.style.display = 'flex';
-        console.log('SecureGPT: Showing floating fallback button');
-      }
-    }, 3000);
+    console.log('SecureGPT: Floating fallback button created and displayed');
+
+    // Always show the fallback button immediately (as requested by user)
+    fallback.style.display = 'flex';
   }
 
   runInjectionTests() {
