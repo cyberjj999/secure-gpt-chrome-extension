@@ -190,6 +190,8 @@ class SecureGPTSimple {
   }
 
   checkExistingElements() {
+    console.log('SecureGPT: Checking existing elements on page');
+    
     // Look for existing prompt divs on various AI platforms
     const selectors = [
       '#prompt-textarea', // ChatGPT
@@ -210,22 +212,29 @@ class SecureGPTSimple {
     for (const selector of selectors) {
       const element = document.querySelector(selector);
       if (element) {
+        console.log('SecureGPT: Found prompt element with selector:', selector);
         this.attachToPromptDiv(element);
         break; // Only attach to the first found element
       }
     }
     
     // Inject De-PII button
+    console.log('SecureGPT: Attempting to inject De-PII button');
     this.injectDePiiButton();
   }
 
   attachToPromptDiv(promptDiv) {
-    if (promptDiv.secureGptAttached) return;
+    if (promptDiv.secureGptAttached) {
+      console.log('SecureGPT: Prompt div already attached, skipping');
+      return;
+    }
+    console.log('SecureGPT: Attaching to prompt div:', promptDiv);
     promptDiv.secureGptAttached = true;
     promptDiv.secureGptDragState = false; // Track drag state
     this.currentPromptDiv = promptDiv;
 
     // Create dual-zone drop overlay
+    console.log('SecureGPT: Creating dual-zone overlay');
     this.createDualZoneOverlay(promptDiv);
     
     // Create dual-zone toggle button
@@ -261,7 +270,12 @@ class SecureGPTSimple {
   }
 
   createDualZoneOverlay(promptDiv) {
-    if (!this.settings.enabled) return;
+    if (!this.settings.enabled) {
+      console.log('SecureGPT: Extension disabled, skipping dual-zone overlay');
+      return;
+    }
+    
+    console.log('SecureGPT: Creating dual-zone overlay for prompt div');
     
     // Create the main overlay container
     const overlay = document.createElement('div');
@@ -274,9 +288,10 @@ class SecureGPTSimple {
       height: 100%;
       pointer-events: none;
       z-index: 1000;
-      display: none;
+      display: none !important;
       opacity: 0;
       transition: opacity 0.2s ease;
+      visibility: hidden;
     `;
     
     // Left zone - Original behavior (pass-through)
@@ -340,6 +355,7 @@ class SecureGPTSimple {
     // Add overlay to prompt div
     promptDiv.style.position = 'relative';
     promptDiv.appendChild(overlay);
+    console.log('SecureGPT: Dual-zone overlay added to prompt div');
     
     // Set up drag and drop events for both zones
     this.setupZoneEvents(leftZone, rightZone, overlay, promptDiv);
@@ -910,7 +926,12 @@ class SecureGPTSimple {
 
   injectDePiiButton() {
     // Don't inject if already exists or extension is disabled
-    if (this.dePiiButton || !this.settings.enabled) return;
+    if (this.dePiiButton || !this.settings.enabled) {
+      console.log('SecureGPT: Button injection skipped - already exists or disabled');
+      return;
+    }
+    
+    console.log('SecureGPT: Attempting to inject De-PII button');
     
     // Look for the send button area on various AI platforms
     const sendButtonSelectors = [
@@ -931,7 +952,25 @@ class SecureGPTSimple {
     let sendButton = null;
     for (const selector of sendButtonSelectors) {
       sendButton = document.querySelector(selector);
-      if (sendButton) break;
+      if (sendButton) {
+        console.log('SecureGPT: Found send button with selector:', selector);
+        break;
+      }
+    }
+    
+    if (!sendButton) {
+      console.log('SecureGPT: No send button found, trying alternative approach');
+      // Try to find any button that might be a send button
+      const allButtons = document.querySelectorAll('button');
+      for (const button of allButtons) {
+        const text = button.textContent.toLowerCase();
+        const ariaLabel = button.getAttribute('aria-label')?.toLowerCase() || '';
+        if (text.includes('send') || text.includes('submit') || ariaLabel.includes('send') || ariaLabel.includes('submit')) {
+          sendButton = button;
+          console.log('SecureGPT: Found send button by text/aria-label:', button);
+          break;
+        }
+      }
     }
 
     // Create De-PII button with file upload functionality
@@ -986,8 +1025,10 @@ class SecureGPTSimple {
     });
 
     if (sendButton && sendButton.parentNode) {
+      console.log('SecureGPT: Inserting button before send button');
       // Insert before send button
       sendButton.parentNode.insertBefore(this.dePiiButton, sendButton);
+      console.log('SecureGPT: Button successfully inserted before send button');
       return;
     }
 
@@ -1024,7 +1065,9 @@ class SecureGPTSimple {
           .filter(btn => btn.offsetParent !== null && !btn.disabled);
         const lastButton = candidateButtons[candidateButtons.length - 1];
         if (lastButton && lastButton.parentNode) {
+          console.log('SecureGPT: Inserting button before last form button');
           lastButton.parentNode.insertBefore(this.dePiiButton, lastButton);
+          console.log('SecureGPT: Button successfully inserted before form button');
           return;
         }
       }
@@ -1032,6 +1075,7 @@ class SecureGPTSimple {
       // Fallback 2: place adjacent to the textbox without breaking layout
       const container = anchor.parentNode;
       if (container) {
+        console.log('SecureGPT: Using fallback 2 - creating wrapper');
         const wrapper = document.createElement('div');
         wrapper.style.display = 'inline-flex';
         wrapper.style.alignItems = 'center';
@@ -1042,6 +1086,7 @@ class SecureGPTSimple {
           container.appendChild(wrapper);
         }
         wrapper.appendChild(this.dePiiButton);
+        console.log('SecureGPT: Button inserted into wrapper');
       }
     }
   }
