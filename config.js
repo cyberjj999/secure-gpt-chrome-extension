@@ -27,7 +27,8 @@ class ConfigManager {
         mistral: true,
         grok: true,
         cohere: true,
-        perplexity: true
+        perplexity: true,
+        deepseek: true
       },
       placeholders: {
         email: '[EMAIL_REDACTED]',

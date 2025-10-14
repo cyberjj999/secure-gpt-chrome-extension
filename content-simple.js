@@ -123,6 +123,9 @@ class SecureGPTSimple {
     if (hostname.includes('perplexity.ai')) {
       return websites.perplexity !== false;
     }
+    if (hostname.includes('chat.deepseek.com')) {
+      return websites.deepseek !== false;
+    }
     
     // Default to enabled for unknown sites
     return true;
@@ -351,7 +354,9 @@ class SecureGPTSimple {
       'button[class*="send" i]', // Send class buttons
       'button[class*="submit" i]', // Submit class buttons
       'button[title*="send" i]', // Send title buttons
-      'button[title*="submit" i]' // Submit title buttons
+      'button[title*="submit" i]', // Submit title buttons
+      'button[data-testid*="send" i]',
+      'button[aria-label*="Ask" i]'
     ];
     
     let sendButton = null;
@@ -359,9 +364,7 @@ class SecureGPTSimple {
       sendButton = document.querySelector(selector);
       if (sendButton) break;
     }
-    
-    if (!sendButton) return;
-    
+
     // Create De-PII button
     this.dePiiButton = document.createElement('button');
     this.dePiiButton.innerHTML = '<img src="' + chrome.runtime.getURL('icons/icon16-white.png') + '" width="16" height="16">';
@@ -396,9 +399,66 @@ class SecureGPTSimple {
       e.stopPropagation();
       this.manualDePii();
     });
-    
-    // Insert before send button
-    sendButton.parentNode.insertBefore(this.dePiiButton, sendButton);
+
+    if (sendButton && sendButton.parentNode) {
+      // Insert before send button
+      sendButton.parentNode.insertBefore(this.dePiiButton, sendButton);
+      return;
+    }
+
+    // DeepSeek-specific placement: locate the toolbar with ds-atom-button controls
+    if (window.location.hostname.includes('chat.deepseek.com')) {
+      // Prefer a visible ds-atom-button within the prompt control bar
+      const dsButtons = Array.from(document.querySelectorAll('button[class*="ds-atom-button"]'))
+        .filter(btn => btn.offsetParent !== null);
+      if (dsButtons.length > 0) {
+        // Insert just before the first visible DeepSeek control button for consistent placement
+        const firstDsButton = dsButtons[0];
+        if (firstDsButton.parentNode) {
+          // Tweak size to visually match DeepSeek controls
+          this.dePiiButton.style.height = '34px';
+          this.dePiiButton.style.padding = '0 8px';
+          this.dePiiButton.style.display = 'inline-flex';
+          this.dePiiButton.style.alignItems = 'center';
+          this.dePiiButton.style.justifyContent = 'center';
+          firstDsButton.parentNode.insertBefore(this.dePiiButton, firstDsButton);
+          return;
+        }
+      }
+    }
+
+    // Fallback 1: find closest form for the textbox and place before primary submit button
+    const anchor = this.currentPromptDiv ||
+                   document.querySelector('div[role="textbox"]') ||
+                   document.querySelector('div[contenteditable="true"]');
+    if (anchor) {
+      const form = anchor.closest('form');
+      if (form) {
+        // Heuristic: choose the last visible, enabled button as the send button
+        const candidateButtons = Array.from(form.querySelectorAll('button'))
+          .filter(btn => btn.offsetParent !== null && !btn.disabled);
+        const lastButton = candidateButtons[candidateButtons.length - 1];
+        if (lastButton && lastButton.parentNode) {
+          lastButton.parentNode.insertBefore(this.dePiiButton, lastButton);
+          return;
+        }
+      }
+
+      // Fallback 2: place adjacent to the textbox without breaking layout
+      const container = anchor.parentNode;
+      if (container) {
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'inline-flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '8px';
+        if (anchor.nextSibling) {
+          container.insertBefore(wrapper, anchor.nextSibling);
+        } else {
+          container.appendChild(wrapper);
+        }
+        wrapper.appendChild(this.dePiiButton);
+      }
+    }
   }
 
   manualDePii() {
