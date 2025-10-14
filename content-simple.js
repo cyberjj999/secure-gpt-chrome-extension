@@ -636,6 +636,7 @@ class SecureGPTSimple {
     // Look for the send button area on various AI platforms
     const sendButtonSelectors = [
       '[data-testid="send-button"]', // ChatGPT
+      'button[aria-label="Send message"]', // Claude specific
       'button[aria-label*="Send" i]', // General send buttons
       'button[aria-label*="Submit" i]', // Submit buttons
       'button[type="submit"]', // Submit type buttons
@@ -662,9 +663,13 @@ class SecureGPTSimple {
       console.log('SecureGPT: No send button found, trying alternative approach');
       // Try to find any button that might be a send button
       const allButtons = document.querySelectorAll('button');
+      console.log('SecureGPT: Found', allButtons.length, 'buttons on page');
+      
       for (const button of allButtons) {
         const text = button.textContent.toLowerCase();
         const ariaLabel = button.getAttribute('aria-label')?.toLowerCase() || '';
+        console.log('SecureGPT: Button text:', text, 'aria-label:', ariaLabel);
+        
         if (text.includes('send') || text.includes('submit') || ariaLabel.includes('send') || ariaLabel.includes('submit')) {
           sendButton = button;
           console.log('SecureGPT: Found send button by text/aria-label:', button);
@@ -732,6 +737,25 @@ class SecureGPTSimple {
       return;
     }
 
+    // Claude-specific fallback: look for the button container
+    if (window.location.hostname.includes('claude.ai')) {
+      console.log('SecureGPT: Claude detected, trying Claude-specific placement');
+      const claudeButton = document.querySelector('button[aria-label="Send message"]');
+      if (claudeButton && claudeButton.parentNode) {
+        console.log('SecureGPT: Found Claude send button, inserting before it');
+        claudeButton.parentNode.insertBefore(this.dePiiButton, claudeButton);
+        return;
+      }
+      
+      // Try to find the button container div
+      const buttonContainer = document.querySelector('div.flex.shrink-0');
+      if (buttonContainer) {
+        console.log('SecureGPT: Found Claude button container, inserting at end');
+        buttonContainer.appendChild(this.dePiiButton);
+        return;
+      }
+    }
+
     // DeepSeek-specific placement: locate the toolbar with ds-atom-button controls
     if (window.location.hostname.includes('chat.deepseek.com')) {
       // Prefer a visible ds-atom-button within the prompt control bar
@@ -788,6 +812,15 @@ class SecureGPTSimple {
         wrapper.appendChild(this.dePiiButton);
         console.log('SecureGPT: Button inserted into wrapper');
       }
+    } else {
+      // Final fallback: append to body with fixed positioning
+      console.log('SecureGPT: Using final fallback - appending to body');
+      this.dePiiButton.style.position = 'fixed';
+      this.dePiiButton.style.top = '20px';
+      this.dePiiButton.style.right = '20px';
+      this.dePiiButton.style.zIndex = '10000';
+      document.body.appendChild(this.dePiiButton);
+      console.log('SecureGPT: Button appended to body with fixed positioning');
     }
   }
 
