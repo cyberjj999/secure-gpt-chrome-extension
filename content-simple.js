@@ -100,7 +100,11 @@ class SecureGPTSimple {
 
     this.setupEventListeners();
     this.setupDebugging();
-    this.createFloatingFallback();
+    
+    // Only create floating button if extension is enabled
+    if (this.settings.enabled) {
+      this.createFloatingFallback();
+    }
   }
 
   isWebsiteEnabled() {
@@ -228,7 +232,8 @@ class SecureGPTSimple {
               }
               
               // Also check if send button area is added to inject our De-PII button
-              this.injectDePiiButton();
+              // COMMENTED OUT: Only using bottom-right floating button for simplicity
+              // this.injectDePiiButton();
             }
           });
         }
@@ -271,7 +276,8 @@ class SecureGPTSimple {
     
     // Inject De-PII button
     console.log('SecureGPT: Attempting to inject De-PII button');
-    this.injectDePiiButton();
+    // COMMENTED OUT: Only using bottom-right floating button for simplicity
+    // this.injectDePiiButton();
   }
 
   findInputElements() {
@@ -445,6 +451,9 @@ class SecureGPTSimple {
             style.display !== 'none');
   }
 
+  // COMMENTED OUT: Only using bottom-right floating button for simplicity
+  // DO NOT REMOVE THIS COMMENTED CODE - IT MAY BE NEEDED IN THE FUTURE
+  /*
   createIsolatedButton() {
     const host = document.createElement('div');
     host.style.cssText = `
@@ -493,6 +502,7 @@ class SecureGPTSimple {
     shadow.appendChild(button);
     return { host, button };
   }
+  */
 
   attachToPromptDiv(promptDiv) {
     if (promptDiv.secureGptAttached) {
@@ -553,57 +563,64 @@ class SecureGPTSimple {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 10000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      backdrop-filter: blur(4px);
     `;
 
     // Create modal content
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      padding: 24px;
-      max-width: 400px;
+      background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(102, 126, 234, 0.2);
+      padding: 0;
+      max-width: 450px;
       width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
+      max-height: 85vh;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     `;
 
-    // Create header
+    // Create header with gradient background
     const header = document.createElement('div');
     header.style.cssText = `
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e1e5e9;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     `;
 
     header.innerHTML = `
-      <div style="display: flex; align-items: center;">
-        <img src="${chrome.runtime.getURL('icons/icon16.png')}" width="24" height="24" style="margin-right: 12px;">
-        <h2 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">SecureGPT</h2>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="${chrome.runtime.getURL('icons/icon32.png')}" width="32" height="32" style="border-radius: 6px;">
+        <div>
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: white;">SecureGPT</h2>
+          <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">Privacy Protection for AI Chats</div>
+        </div>
       </div>
       <button class="close-btn" style="
-        background: none;
-        border: none;
-        font-size: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-size: 18px;
         cursor: pointer;
-        color: #666;
-        padding: 0;
-        width: 32px;
-        height: 32px;
+        padding: 8px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 6px;
-        transition: background-color 0.2s;
+        border-radius: 8px;
+        transition: all 0.2s;
+        font-weight: 500;
       ">×</button>
     `;
 
@@ -635,6 +652,14 @@ class SecureGPTSimple {
       }
     ];
 
+    // Create content area
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = `
+      padding: 24px;
+      background: white;
+      margin: 0;
+    `;
+
     // Add menu items
     menuItems.forEach((item, index) => {
       const menuItem = document.createElement('div');
@@ -642,31 +667,58 @@ class SecureGPTSimple {
       menuItem.style.cssText = `
         display: flex;
         align-items: center;
-        padding: 16px;
+        padding: 20px;
         cursor: pointer;
-        transition: background-color 0.2s;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        border: 1px solid #f0f0f0;
+        transition: all 0.2s;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #e9ecef;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       `;
 
       menuItem.innerHTML = `
-        <span style="font-size: 24px; margin-right: 16px; width: 32px; text-align: center;">${item.icon}</span>
+        <div style="
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 16px;
+          font-size: 20px;
+          color: white;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        ">${item.icon}</div>
         <div style="flex: 1;">
-          <div style="font-weight: 500; font-size: 16px; color: #333; margin-bottom: 4px;">${item.text}</div>
-          <div style="font-size: 14px; color: #666; line-height: 1.4;">${item.description}</div>
+          <div style="font-weight: 600; font-size: 16px; color: #2c3e50; margin-bottom: 4px;">${item.text}</div>
+          <div style="font-size: 14px; color: #6c757d; line-height: 1.4;">${item.description}</div>
         </div>
+        <div style="
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6c757d;
+          font-size: 16px;
+        ">→</div>
       `;
 
       // Hover effect
       menuItem.addEventListener('mouseenter', () => {
-        menuItem.style.backgroundColor = '#f8f9fa';
-        menuItem.style.borderColor = '#e1e5e9';
+        menuItem.style.backgroundColor = 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)';
+        menuItem.style.borderColor = '#667eea';
+        menuItem.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+        menuItem.style.transform = 'translateY(-2px)';
       });
 
       menuItem.addEventListener('mouseleave', () => {
-        menuItem.style.backgroundColor = 'transparent';
-        menuItem.style.borderColor = '#f0f0f0';
+        menuItem.style.backgroundColor = 'white';
+        menuItem.style.borderColor = '#e9ecef';
+        menuItem.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+        menuItem.style.transform = 'translateY(0)';
       });
 
       // Click handler
@@ -677,15 +729,27 @@ class SecureGPTSimple {
         modal.remove();
       });
 
-      modalContent.appendChild(menuItem);
+      contentArea.appendChild(menuItem);
     });
 
     // Add header and content to modal
     modalContent.appendChild(header);
+    modalContent.appendChild(contentArea);
     modal.appendChild(modalContent);
 
     // Add to document
     document.body.appendChild(modal);
+
+    // Add entrance animation
+    modal.style.opacity = '0';
+    modalContent.style.transform = 'scale(0.9) translateY(20px)';
+    
+    requestAnimationFrame(() => {
+      modal.style.transition = 'opacity 0.3s ease';
+      modalContent.style.transition = 'transform 0.3s ease';
+      modal.style.opacity = '1';
+      modalContent.style.transform = 'scale(1) translateY(0)';
+    });
 
     // Close modal handlers
     const closeModal = () => {
@@ -695,6 +759,19 @@ class SecureGPTSimple {
     // Close button
     const closeBtn = modalContent.querySelector('.close-btn');
     closeBtn.addEventListener('click', closeModal);
+    
+    // Add hover effects to close button
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+      closeBtn.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+      closeBtn.style.transform = 'scale(1.05)';
+    });
+    
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+      closeBtn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      closeBtn.style.transform = 'scale(1)';
+    });
 
     // Click outside to close
     modal.addEventListener('click', (e) => {
@@ -714,23 +791,37 @@ class SecureGPTSimple {
   }
 
   openFilePicker() {
-    if (this.fileInput) {
-      this.fileInput.click();
-    } else {
-      console.error('SecureGPT: File input not found');
+    // Create file input if it doesn't exist
+    if (!this.fileInput) {
+      this.fileInput = document.createElement('input');
+      this.fileInput.type = 'file';
+      this.fileInput.multiple = true;
+      this.fileInput.accept = '.txt,.md,.csv,.json,.log,.pdf,.doc,.docx,.rtf,.js,.py,.html,.xml,.yaml';
+      this.fileInput.style.display = 'none';
+      this.fileInput.addEventListener('change', async (event) => {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+          await this.handleSecureFileUpload(files);
+        }
+      });
+      document.body.appendChild(this.fileInput);
     }
+    
+    this.fileInput.click();
   }
 
   // File upload functionality moved to modal menu
 
   toggleExtension() {
     this.settings.enabled = !this.settings.enabled;
-    chrome.storage.sync.set({ settings: this.settings });
+    chrome.storage.sync.set({ secureGptSettings: this.settings });
     
     if (this.settings.enabled) {
       this.showNotification('SecureGPT enabled');
+      this.showFloatingButton();
     } else {
       this.showNotification('SecureGPT disabled');
+      this.hideFloatingButton();
     }
   }
 
@@ -895,6 +986,9 @@ class SecureGPTSimple {
     }
   }
 
+  // COMMENTED OUT: Only using bottom-right floating button for simplicity
+  // DO NOT REMOVE THIS COMMENTED CODE - IT MAY BE NEEDED IN THE FUTURE
+  /*
   injectDePiiButton() {
     // Don't inject if already exists or extension is disabled
     if (this.dePiiButton || !this.settings.enabled) {
@@ -1080,6 +1174,7 @@ class SecureGPTSimple {
       console.log('SecureGPT: Button appended to body with fixed positioning');
     }
   }
+  */
 
   async createSanitizedFiles(originalFiles) {
     const sanitizedFiles = [];
@@ -1827,6 +1922,35 @@ class SecureGPTSimple {
 
       runTests: () => {
         this.runInjectionTests();
+      },
+
+      // New debugging methods for floating button
+      toggleFloatingButton: () => {
+        if (this.isFloatingButtonVisible()) {
+          this.hideFloatingButton();
+        } else {
+          this.showFloatingButton();
+        }
+      },
+
+      showFloatingButton: () => {
+        this.showFloatingButton();
+      },
+
+      hideFloatingButton: () => {
+        this.hideFloatingButton();
+      },
+
+      isFloatingButtonVisible: () => {
+        return this.isFloatingButtonVisible();
+      },
+
+      getSettings: () => {
+        return this.settings;
+      },
+
+      toggleExtension: () => {
+        this.toggleExtension();
       }
     };
 
@@ -1836,6 +1960,12 @@ class SecureGPTSimple {
     console.log('- secureGPTDebug.testInjection()');
     console.log('- secureGPTDebug.checkObservers()');
     console.log('- secureGPTDebug.runTests()');
+    console.log('- secureGPTDebug.toggleFloatingButton()');
+    console.log('- secureGPTDebug.showFloatingButton()');
+    console.log('- secureGPTDebug.hideFloatingButton()');
+    console.log('- secureGPTDebug.isFloatingButtonVisible()');
+    console.log('- secureGPTDebug.getSettings()');
+    console.log('- secureGPTDebug.toggleExtension()');
   }
 
   investigateRealDOM() {
@@ -2017,6 +2147,11 @@ class SecureGPTSimple {
   }
 
   createFloatingFallback() {
+    // Don't create if already exists
+    if (document.getElementById('securegpt-fallback')) {
+      return;
+    }
+
     // Create floating fallback button with proper SecureGPT branding
     const fallback = document.createElement('div');
     fallback.id = 'securegpt-fallback';
@@ -2068,9 +2203,30 @@ class SecureGPTSimple {
 
     document.body.appendChild(fallback);
     console.log('SecureGPT: Floating fallback button created and displayed');
+  }
 
-    // Always show the fallback button immediately (as requested by user)
-    fallback.style.display = 'flex';
+  showFloatingButton() {
+    const fallback = document.getElementById('securegpt-fallback');
+    if (fallback) {
+      fallback.style.display = 'flex';
+      console.log('SecureGPT: Floating button shown');
+    } else {
+      // Create the button if it doesn't exist
+      this.createFloatingFallback();
+    }
+  }
+
+  hideFloatingButton() {
+    const fallback = document.getElementById('securegpt-fallback');
+    if (fallback) {
+      fallback.style.display = 'none';
+      console.log('SecureGPT: Floating button hidden');
+    }
+  }
+
+  isFloatingButtonVisible() {
+    const fallback = document.getElementById('securegpt-fallback');
+    return fallback && fallback.style.display !== 'none';
   }
 
   runInjectionTests() {
@@ -2113,10 +2269,10 @@ class SecureGPTSimple {
 // Initialize SecureGPT when the page loads
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    new SecureGPTSimple();
+    window.secureGPTInstance = new SecureGPTSimple();
   });
 } else {
-  new SecureGPTSimple();
+  window.secureGPTInstance = new SecureGPTSimple();
 }
 
 // Listen for messages from popup
@@ -2124,5 +2280,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'updateSettings') {
     // Reload the page to apply new settings
     window.location.reload();
+  }
+});
+
+// Listen for storage changes to update button visibility
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync' && changes.secureGptSettings) {
+    const newSettings = changes.secureGptSettings.newValue;
+    if (newSettings && typeof newSettings.enabled !== 'undefined') {
+      // Update the local settings
+      if (window.secureGPTInstance) {
+        window.secureGPTInstance.settings.enabled = newSettings.enabled;
+        
+        // Show or hide the floating button based on enabled state
+        if (newSettings.enabled) {
+          window.secureGPTInstance.showFloatingButton();
+        } else {
+          window.secureGPTInstance.hideFloatingButton();
+        }
+      }
+    }
   }
 });

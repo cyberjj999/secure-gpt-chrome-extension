@@ -59,13 +59,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.storage.sync.set({ secureGptSettings: request.settings }, () => {
         sendResponse({ success: true });
         
-        // Notify all ChatGPT tabs to reload
-        chrome.tabs.query({ url: ['*://chat.openai.com/*', '*://chatgpt.com/*'] }, (tabs) => {
+        // Notify all supported AI platform tabs to reload
+        chrome.tabs.query({ 
+          url: [
+            '*://chat.openai.com/*', 
+            '*://chatgpt.com/*',
+            '*://claude.ai/*',
+            '*://gemini.google.com/*',
+            '*://ai.meta.com/*',
+            '*://mistral.ai/*',
+            '*://x.ai/*',
+            '*://cohere.com/*',
+            '*://www.perplexity.ai/*',
+            '*://chat.deepseek.com/*'
+          ] 
+        }, (tabs) => {
           tabs.forEach(tab => {
             chrome.tabs.sendMessage(tab.id, { action: 'updateSettings' });
           });
         });
       });
+      return true;
+      
+    case 'openSettings':
+      // Open the configuration page in a new tab
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('config.html')
+      });
+      sendResponse({ success: true });
       return true;
       
     case 'getStats':
