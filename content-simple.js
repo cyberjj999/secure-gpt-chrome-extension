@@ -2063,7 +2063,7 @@ class SecureGPTSimple {
 
     fallback.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.showModal();
+      this.toggleSecureGPTPopup();
     });
 
     document.body.appendChild(fallback);
